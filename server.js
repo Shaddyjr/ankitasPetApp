@@ -17,9 +17,45 @@ var db = new sqlite3.Database(dbFile);
 const BASE_URL = "http://api.petfinder.com/";
 const API_KEY = process.env.API_KEY;
 
+const insert_into_users = ()=>{
+  return db.prepare();
+}
+const insert_into_shelters = ()=>{
+  return db.prepare();
+}
+const insert_into_questions = ()=>{
+  return db.prepare();
+}
+const insert_into_metaAnswers = ()=>{
+  return db.prepare();
+}
+
+const insertData = (table, ...data)=>{
+  let statement;
+  switch(table){
+    case "users":
+      insert_into_users(data);
+      break;
+    case "shelters":
+      insert_into_shelters(data);
+      break;
+    case "questions":
+      insert_into_questions(data);
+      break;
+    case "metaAnswers":
+      insert_into_metaAnswers(data);
+      break;
+    default:
+      console.log(`Could not find table: ${table}`)
+      return;
+  }
+  statement.run(data);
+  statement.finalize();
+}
+
 const addDummyData = function(){
   db.serialize(function(){
-    
+
   });
 }
 
