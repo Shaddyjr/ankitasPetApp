@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Shelters</title>
+</head>
+<body>
+    <div class="shelter-container">
+    <% for(const shelter of shelters){ %>
+        <h1><%= shelter.name.$t%></h1>
+        <p>Located: <%= `${shelter.zip.$t} ${shelter.city.$t}, ${shelter.state.$t}`%></p>
+        <p>Contact: <%= shelter.email.$t%></p>
+        <p></p>
+    <% } %>
+    </div>
+</body>
+</html>

@@ -9,12 +9,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- import the webpage's stylesheet -->
-    <link rel="stylesheet" href="/style.css">
+    <!-- <link rel="stylesheet" href="/style.css"> -->
     
     <!-- import the webpage's client-side javascript file -->
-    <script src="/client.js" defer></script>
+    <!-- <script src="/client.js" defer></script> -->
   </head>
   <body>
-    
+    <form action="/shelters/zip" method="post">
+      <label for="zip">Zip Code:</label>
+      <input id="zip" name="zip" type="text" pattern="[0-9]{5}" placeholder="zipcode">
+      <button>Find Shelters near me!</button>
+    </form>
+    <a href="/pets">Pets</a>
+    <a href="/users">Users</a>
   </body>
 </html>

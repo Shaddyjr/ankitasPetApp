@@ -10,7 +10,10 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "dotenv": "^6.0.0",
+    "ejs": "^2.6.1",
     "express": "^4.16.3",
+    "node-fetch": "^2.2.0",
     "sqlite3": "^4.0.0"
   },
   "engines": {
