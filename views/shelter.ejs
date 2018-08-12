@@ -13,6 +13,21 @@
         <p>Contact: <%= shelter.contact %></p>
         <a href="<%=shelter.url%>">Website</a>
         <a href="<%=shelter.urlForm%>">Original Form</a>
+
+        <h2>Edit</h2>
+        <form method="post">
+            <label for="name">name:</label>
+            <input name="name" type="text" value="<%=shelter.name%>">
+            <label for="location">location:</label>
+            <input name="location" type="text" value="<%=shelter.location%>">
+            <label for="contact">contact:</label>
+            <input name="contact" type="text" value="<%=shelter.contact%>">
+            <label for="url">url:</label>
+            <input name="url" type="text" value="<%=shelter.url%>">
+            <label for="formUrl">formUrl:</label>
+            <input name="formUrl" type="text" value="<%=shelter.formUrl%>">
+            <input type="submit" value="Submit">
+        </form>
     </div>
 </body>
 </html>

@@ -22,6 +22,7 @@ module.exports = class DbHandler {
         this.db.run("CREATE TABLE `answers` ( `userId` INTEGER NOT NULL, `metaId` INTEGER, `value` BLOB)"); 
     }
     
+    // CREATE //
     answers_insert_statement() {
         return "INSERT INTO answers (userId, metaId, value) VALUES (?,?,?);";
     }
@@ -67,6 +68,75 @@ module.exports = class DbHandler {
         return this.queryDb(query, data);
     }
 
+    // READ //
+    getShelters(){
+        const query = "SELECT * FROM shelters;";
+        return this.queryDb(query);
+    }
+    getMetaAnswers(){
+        const query = "SELECT * FROM metaAnswers;";
+        return this.queryDb(query);
+    }
+    getUsers(){
+        const query = "SELECT * FROM users;";
+        return this.queryDb(query);
+    }
+
+    find_answers_by_id_statement(){
+        return "SELECT * FROM answers WHERE id=? LIMIT 1";
+    }
+    find_users_by_id_statement(){
+        return "SELECT * FROM users WHERE id=? LIMIT 1";
+    }
+    find_shelters_by_id_statement(){
+        return "SELECT * FROM shelters WHERE api_id=? LIMIT 1";
+    }
+    find_questions_by_id_statement(){
+        return "SELECT * FROM questions WHERE id=? LIMIT 1";
+    }
+    find_metaAnswers_by_id_statement(){
+        return "SELECT * FROM metaAnswers WHERE id=? LIMIT 1";
+    }
+
+    findById(table, id){
+        let query;
+        switch (table) {
+            case "users":
+                query = this.find_users_by_id_statement();
+                break;
+            case "shelters":
+                query = this.find_shelters_by_id_statement();
+                break;
+            case "questions":
+                query = this.find_questions_by_id_statement();
+                break;
+            case "metaAnswers":
+                query = this.find_metaAnswers_by_id_statement();
+                break;
+            case "answers":
+                query = this.find_answers_by_id_statement();
+                break;
+            default:
+                console.log(`Could not find table: ${table}`)
+                return;
+        }
+        return this.queryDbById(query, id);
+    }
+
+    queryDbById(query, id){
+        return new Promise((res, rej)=>{
+            this.db.get(
+                query,
+                id,
+                function(err, row){
+                    if(err) rej(err);
+                    res(row);
+                }
+            );
+        });
+    }
+
+    // UPDATE //
     users_update_statement(){
         return "UPDATE answers SET username=?, salt=?, password=? WHERE id=?;";
     }
@@ -81,7 +151,6 @@ module.exports = class DbHandler {
     }
     answers_update_statement(){
         return "UPDATE users SET userId=?, metaId=?, value=? WHERE id=?;";
-
     }
 
     updateData(table, data){
@@ -109,9 +178,46 @@ module.exports = class DbHandler {
         return this.queryDb(query, data);
     }
 
-    getShelters(){
-        const query = "SELECT * FROM shelters;";
-        return this.queryDb(query);
+    // DELETE //
+    users_delete_statement(){
+        return "DELETE FROM answers WHERE id=?;";
+    }
+    shelters_delete_statement(){
+        return "DELETE FROM shelters WHERE api_id=?;";
+    }
+    questions_delete_statement(){
+        return "DELETE FROM questions WHERE id=?;";
+    }
+    metaAnswers_delete_statement(){
+        return "DELETE FROM metaAnswers WHERE id=?;";
+    }
+    answers_delete_statement(){
+        return "DELETE FROM users WHERE id=?;";
+    }
+
+    deleteData(table, data){
+        let query;
+        switch (table) {
+            case "users":
+                query = this.users_delete_statement();
+                break;
+            case "shelters":
+                query = this.shelters_delete_statement();
+                break;
+            case "questions":
+                query = this.questions_delete_statement();
+                break;
+            case "metaAnswers":
+                query = this.metaAnswers_delete_statement();
+                break;
+            case "answers":
+                query = this.answers_delete_statement();
+                break;
+            default:
+                console.log(`Could not find table: ${table}`)
+                return;
+        }
+        return this.queryDb(query, data);
     }
 
     queryDb(str, data){
@@ -119,19 +225,6 @@ module.exports = class DbHandler {
             this.db.all(
                 str,
                 data,
-                function(err, row){
-                    if(err) rej(err);
-                    res(row);
-                }
-            );
-        });
-    }
-
-    findShelterByApiId(api_id){
-        return new Promise((res, rej)=>{
-            this.db.get(
-                "SELECT * FROM shelters WHERE api_id=?",
-                api_id,
                 function(err, row){
                     if(err) rej(err);
                     res(row);

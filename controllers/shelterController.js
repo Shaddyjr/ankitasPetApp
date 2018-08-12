@@ -32,7 +32,7 @@ module.exports = function (app, dbHandler) {
     const findOrCreateDbShelter = shelter => {
         return new Promise((res,rej)=>{
             const api_id = shelter.id.$t;
-            dbHandler.findShelterByApiId(api_id).then(row => {
+            dbHandler.findById("shelters",api_id).then(row => {
                 if(row) res(row);
                 dbHandler.insertData(
                     "shelters",
@@ -112,7 +112,7 @@ module.exports = function (app, dbHandler) {
     app.route("/shelters/id/:id")
         .get((req, res) => {
             const api_id = req.params.id;
-            dbHandler.findShelterByApiId(api_id).then(row => {
+            dbHandler.findById("shelters",api_id).then(row => {
                 if(row){
                     res.render(
                         "shelter",
@@ -128,7 +128,26 @@ module.exports = function (app, dbHandler) {
         })
         .post((req, res) => {
             const api_id = req.params.id;
-
+            dbHandler.findById("shelters",api_id).then(row => {
+                if(row){
+                    // updating shelter
+                    dbHandler.updateData("shelters",[
+                        req.body.name,
+                        req.body.location,
+                        req.body.contact,
+                        req.body.url,
+                        req.body.formUrl,
+                        api_id
+                    ]).then(()=>{
+                        res.redirect(`/shelters/id/${api_id}`);
+                    });
+                }else{
+                    res.render(
+                        "error",
+                        {error:`ID: ${api_id} not found`}
+                    )
+                }
+            })
         })
         .delete((req, res) => {
             const api_id = req.params.id;
