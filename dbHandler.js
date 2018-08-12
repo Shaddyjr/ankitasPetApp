@@ -67,6 +67,47 @@ module.exports = class DbHandler {
         return this.queryDb(query, data);
     }
 
+    users_update_statement(){
+        return "UPDATE answers SET username=?, salt=?, password=? WHERE id=?;";
+    }
+    shelters_update_statement(){
+        return "UPDATE shelters SET name=?, location=?, contact=?, url=?, formUrl=? WHERE api_id=? ;";
+    }
+    questions_update_statement(){
+        return "UPDATE questions SET shelterId=?, formInputName=?, metaAnswerId=? WHERE id=?;";
+    }
+    metaAnswers_update_statement(){
+        return "UPDATE metaAnswers SET name=?, inputType=? WHERE id=?;";
+    }
+    answers_update_statement(){
+        return "UPDATE users SET userId=?, metaId=?, value=? WHERE id=?;";
+
+    }
+
+    updateData(table, data){
+        let query;
+        switch (table) {
+            case "users":
+                query = this.users_update_statement();
+                break;
+            case "shelters":
+                query = this.shelters_update_statement();
+                break;
+            case "questions":
+                query = this.questions_update_statement();
+                break;
+            case "metaAnswers":
+                query = this.metaAnswers_update_statement();
+                break;
+            case "answers":
+                query = this.answers_update_statement();
+                break;
+            default:
+                console.log(`Could not find table: ${table}`)
+                return;
+        }
+        return this.queryDb(query, data);
+    }
 
     getShelters(){
         const query = "SELECT * FROM shelters;";

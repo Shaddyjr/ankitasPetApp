@@ -111,7 +111,7 @@ module.exports = function (app, dbHandler) {
 
     app.route("/shelters/id/:id")
         .get((req, res) => {
-            const api_id = req.params.id
+            const api_id = req.params.id;
             dbHandler.findShelterByApiId(api_id).then(row => {
                 if(row){
                     res.render(
@@ -127,9 +127,11 @@ module.exports = function (app, dbHandler) {
             })
         })
         .post((req, res) => {
+            const api_id = req.params.id;
 
         })
         .delete((req, res) => {
+            const api_id = req.params.id;
 
         });
 }
