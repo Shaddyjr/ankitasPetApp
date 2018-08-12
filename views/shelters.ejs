@@ -9,10 +9,11 @@
 <body>
     <div class="shelter-container">
     <% for(const shelter of shelters){ %>
-        <h1><%= shelter.name.$t%></h1>
-        <p>Located: <%= `${shelter.zip.$t} ${shelter.city.$t}, ${shelter.state.$t}`%></p>
-        <p>Contact: <%= shelter.email.$t%></p>
-        <p></p>
+        <h1><%= shelter.name%></h1>
+        <p>Located: <%= shelter.location %></p>
+        <p>Contact: <%= shelter.contact %></p>
+        <a href="<%=shelter.url%>">Website</a>
+        <a href="<%=shelter.urlForm%>">Original Form</a>
     <% } %>
     </div>
 </body>
