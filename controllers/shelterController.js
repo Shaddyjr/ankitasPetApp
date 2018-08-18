@@ -74,6 +74,7 @@ module.exports = function (app, dbHandler) {
     }
 
     const getShelterQuestions = shelter =>{
+        console.log(shelter);
         const shelterId = shelter.api_id;
         return new Promise((res,rej)=>{
             const statement = dbHandler.find_questions_by_shelterId_statement();
@@ -120,17 +121,33 @@ module.exports = function (app, dbHandler) {
         })
     }
 
-    const updateShelter = function(shelterId, body){
+    const updateShelter = function(shelter,newShelterData){
+        const shelterId = shelter.api_id;
         return new Promise((res,rej)=>{
             dbHandler.updateData("shelters",[
-                body.name,
-                body.location,
-                body.contact,
-                body.url,
-                body.formUrl,
+                newShelterData.name,
+                newShelterData.location,
+                newShelterData.contact,
+                newShelterData.url,
+                newShelterData.formUrl,
                 shelterId
-            ]).then(res).catch(rej);
+            ]).then(data=>{
+                res(shelter,data)
+            }).catch(rej);
         })
+    }
+
+    const handleForm = (shelter,data) => {
+        return new Promise((res,rej)=>{
+            if(data!=1) res(shelter,data);
+            if(shelter.formUrl){
+                getShelterQuestions(shelter)
+                    .then(data=>res(shelter,data))
+                    .catch(rej);
+            }else{
+                res(shelter);
+            }
+        });
     }
 
     app.get("/shelters", (req, res) => {
@@ -194,47 +211,33 @@ module.exports = function (app, dbHandler) {
         .put((req, res) => {
             const shelterId = req.params.id;
             validShelter(shelterId)
+                .then(row=>updateShelter(row,req.body),err=>errorHandler(err,res))
+                .then(handleForm,err=>errorHandler(err,res))
                 .then(
-                    row=>{
-                        updateShelter(shelterId, req.body)
-                            .then(
-                                row=>{
-                                    if(row.formUrl){
-                                        getShelterQuestions(row)
-                                            .then(data=>{
-                                                    if(data){
-                                                        const shelterFormatter = new ShelterFormatter(formUrl, shelterId);
-                                                        shelterFormatter.getCleanPage()
-                                                            .then(res.send);
-                                                    }
-                                                    showShelter(row,res)
-                                            }
-                                        )
-                                    }
-                                    showShelter(row,res);
-                                },
-                                err=>errorHandler(err,res)
-                            )
+                    (shelter,data)=>{
+                        console.log("shelter: ", shelter)
+                        console.log("data: ", data);
+                        if(data){
+                            const shelterFormatter = new ShelterFormatter(formUrl, shelterId);
+                            shelterFormatter.getCleanPage()
+                                .then(res.send);
+                        }else{
+                            showShelter(shelter,res);
+                        }
                     },
                     err=>errorHandler(err,res)
-                );
- 
+                )
         })
         .delete((req, res) => {
             // NEEDS TO ALSO REMOVE SHELTER QUESTIONS
             const shelterId = req.params.id;
-            dbHandler.findById("shelters",shelterId).then(row => {
-                if(row){
+            validShelter(shelterId)
+                .then(row=>{
                     dbHandler.deleteData("shelters",shelterId)
                         .then(()=>{
                             res.redirect(`/shelters`);
                         });
-                }else{
-                    res.render(
-                        "error",
-                        {error:`ID: ${shelterId} not found`}
-                    );
-                }
-            });
+                })
+                .catch(err=>errorHandler(err, res));
         });
 }

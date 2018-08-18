@@ -15,7 +15,7 @@ module.exports = class DbHandler {
 
     createTables() {
         this.db.run("CREATE TABLE 'users' ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL UNIQUE, `salt` TEXT, `password` TEXT NOT NULL )");
-        this.db.run("CREATE TABLE `shelters` ( `api_id` TEXT, `name` TEXT, `location` TEXT, `contact` TEXT, `url` TEXT, `formUrl` TEXT )");
+        this.db.run("CREATE TABLE `shelters` ( `api_id` TEXT UNIQUE, `name` TEXT, `location` TEXT, `contact` TEXT, `url` TEXT, `formUrl` TEXT )");
         this.db.run("CREATE TABLE `questions` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `shelterId` INTEGER NOT NULL, `formInputName` TEXT NOT NULL, `metaAnswerId` INTEGER NOT NULL );");
         this.db.run("CREATE TABLE `metaAnswers` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `inputType` TEXT DEFAULT 'text' )");
         this.db.run("CREATE TABLE `answers` ( `userId` INTEGER NOT NULL, `metaId` INTEGER, `value` BLOB)"); 
@@ -143,7 +143,7 @@ module.exports = class DbHandler {
         return "UPDATE answers SET username=?, salt=?, password=? WHERE id=?;";
     }
     shelters_update_statement(){
-        return "UPDATE shelters SET name=?, location=?, contact=?, url=?, formUrl=? WHERE api_id=? ;";
+        return "UPDATE shelters SET name=?, location=?, contact=?, url=?, formUrl=? WHERE api_id=?;";
     }
     questions_update_statement(){
         return "UPDATE questions SET shelterId=?, formInputName=?, metaAnswerId=? WHERE id=?;";
@@ -177,7 +177,23 @@ module.exports = class DbHandler {
                 console.log(`Could not find table: ${table}`)
                 return;
         }
-        return this.queryDb(query, data);
+        return this.updateDb(query, data);
+    }
+
+    /**
+     * Returns promise that resolves number of rows changed.
+     */
+    updateDb(query, data){
+        return new Promise((res, rej)=>{
+            this.db.run(
+                query,
+                data,
+                function(err){
+                    if(err) rej(err);
+                    res(this.changes);
+                }
+            );
+        });
     }
 
     // DELETE //
