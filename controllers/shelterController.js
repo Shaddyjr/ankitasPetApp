@@ -1,10 +1,9 @@
 var fetch = require("node-fetch");
-const { JSDOM } = require("jsdom");
-const dom = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`);
-console.log(dom.window.document.querySelector("p").textContent);
+const API_KEY = process.env.API_KEY;
+const ShelterFormatter = require("../shelterFormatter");
+
 module.exports = function (app, dbHandler) {
     const BASE_URL = "http://api.petfinder.com/";
-    const API_KEY = process.env.API_KEY;
 
     const errorHandler = (err,response) => {
         response.render("error",{error:err});
@@ -34,8 +33,8 @@ module.exports = function (app, dbHandler) {
 
     const findOrCreateShelterFromAPI = shelter => {
         return new Promise((res,rej)=>{
-            const api_id = shelter.id.$t;
-            dbHandler.findById("shelters",api_id).then(row => {
+            const shelterId = shelter.id.$t;
+            dbHandler.findById("shelters",shelterId).then(row => {
                 if(row) res(row);
                 dbHandler.insertData(
                     "shelters",
@@ -45,54 +44,42 @@ module.exports = function (app, dbHandler) {
                     shelter.email.$t,
                     null,
                     null
-                ).then(dbShelter=>res(dbShelter));
+                )
+                .then(dbShelter=>res(dbShelter));
             });
         });
     }
     
-    const parseFormUrl = URL => {
+    // const parseFormUrl = URL => {
+    //     return new Promise((res,rej)=>{
+    //         fetch(URL)
+    //             .then(response=>response.text())
+    //             .then(htmlText=>{
+    //                 const start = htmlText.search(/<form/);
+    //                 const end = htmlText.search(/form>/);
+    //                 if(start < 0 || end < 0) rej("Could not find a form tag");
+    //                 res(htmlText.slice(start, end+1));
+    //             }, err=>errorHandler(err))
+    //     });
+    // }
+
+    const createShelterQuestions = (shelterId, params)=>{
+        // shelterValidity already checked
+        // SHOULD ADD to META ANSWERS
         return new Promise((res,rej)=>{
-            fetch(URL)
-                .then(response=>response.text())
-                .then(htmlText=>{
-                    const start = htmlText.search(/<form/);
-                    const end = htmlText.search(/form>/);
-                    if(start < 0 || end < 0) rej("Could not find a form tag");
-                    res(htmlText.slice(start, end+1));
-                }, err=>errorHandler(err))
+            for(const i in params){
+
+            }
         });
     }
 
-    const createShelterQuestions = (shelterId, formUrl)=>{
+    const getShelterQuestions = shelter =>{
+        const shelterId = shelter.api_id;
         return new Promise((res,rej)=>{
-            parseFormUrl(formUrl)
-                .then(str=>{
-                    console.log(str)
-                    res(str);
-                });
-        });
-    }
-
-    const createShelterFromForm = shelterArr => {
-        return new Promise((res,rej)=>{
-            dbHandler.insertData(
-                "shelters",
-                shelterArr[0],
-                shelterArr[1],
-                shelterArr[2],
-                shelterArr[3],
-                shelterArr[4],
-                shelterArr[5]
-            ).then(dbShelter=>{
-                if(!shelterArr){
-                    createShelterQuestions(dbShelter.id, dbShelter.formUrl)
-                        .then(data=>{
-                            res(dbShelter);
-                        });
-                }else{
-                    res(dbShelter);
-                }
-            });
+            const statement = dbHandler.find_questions_by_shelterId_statement();
+            dbHandler.queryDb(statement,shelterId)
+                .then(res)
+                .catch(rej);
         });
     }
 
@@ -124,48 +111,38 @@ module.exports = function (app, dbHandler) {
         });
     }
 
-    const getFormUrl = shelterId => {
+    const validShelter = shelterId =>{
         return new Promise((res, rej)=>{
             dbHandler.findById("shelters",shelterId).then(row => {
-                if(row){
-                    res(row.formUrl);
-                }else{
-                    rej(`Shelter Id: ${shelterId} could not be found`);
-                }
+                if(row) res(row);
+                rej(`Shelter Id: ${shelterId} could not be found`);
             })
         })
     }
 
-    const updateShelter = function(api_id, body){
-        /**
-         * Find previous formUrl
-         *  if changed:
-         *      delete all questions for shelter
-         *      create questions for new formUrl
-         */
+    const updateShelter = function(shelterId, body){
         return new Promise((res,rej)=>{
-            createShelterQuestions(api_id, body.formUrl);
             dbHandler.updateData("shelters",[
                 body.name,
                 body.location,
                 body.contact,
                 body.url,
                 body.formUrl,
-                api_id
-            ])
+                shelterId
+            ]).then(res).catch(rej);
         })
     }
+
     app.get("/shelters", (req, res) => {
-        dbHandler.getShelters().then(
-            data => {
-                res.render("shelters", {
-                    "shelters": data
-                })
-            },
-            err => res.render("error", {
-                error: err
-            })
-        );
+        dbHandler.getShelters()
+            .then(
+                data => {
+                    res.render("shelters", {
+                        "shelters": data
+                    })
+                },
+                err => errorHandler(err,res)
+            );
     });
 
     app.get("/shelters/zip/:zip", (req, res) => {
@@ -176,9 +153,7 @@ module.exports = function (app, dbHandler) {
                 data => res.render("shelters", {
                     "shelters": data
                 }),
-                err => res.render("error", {
-                    error: err
-                })
+                err => errorHandler(err,res)
             );
     });
 
@@ -189,52 +164,75 @@ module.exports = function (app, dbHandler) {
         res.redirect(`/shelters/zip/${zip}`);
     });
 
+    const showShelter = (row,res) =>{
+        res.render(
+            "shelter",
+            {"shelter":row}
+        )
+    }
+
     app.route("/shelters/id/:id")
         .get((req, res) => {
-            const api_id = req.params.id;
-            dbHandler.findById("shelters",api_id).then(row => {
-                if(row){
-                    res.render(
-                        "shelter",
-                        {"shelter":row}
-                    )
-                }else{
-                    res.render(
-                        "error",
-                        {error:`ID: ${api_id} not found`}
-                    )
-                }
-            })
+            // SHOULD INCLUDE QUESTIONS
+            const shelterId = req.params.id;
+            validShelter(shelterId)
+                .then(row=>showShelter(row,res))
+                .catch(err=>errorHandler(err,res));
+        })
+        .post((req,res)=>{
+            const shelterId = req.params.id;
+            validShelter(shelterId)
+                .then(getShelterQuestions,err=>errorHandler(err,res))
+                .then(data=>{
+                    if(data) res.redirect(`shelters/id/${shelterId}`);
+                    createShelterQuestions(shelterId, req.body)
+                        .then(()=>{
+                            res.redirect(`shelters/id/${shelterId}`);
+                        })
+                })
         })
         .put((req, res) => {
-            const api_id = req.params.id;
-            dbHandler.findById("shelters",api_id).then(row => {
-                getFormUrl(api_id).then()
-                if(row){
-                    updateShelter(api_id, req.body)
-                        .then(()=>{
-                            res.redirect(`/shelters/id/${api_id}`);
-                        });
-                }else{
-                    res.render(
-                        "error",
-                        {error:`ID: ${api_id} not found`}
-                    );
-                }
-            });
+            const shelterId = req.params.id;
+            validShelter(shelterId)
+                .then(
+                    row=>{
+                        updateShelter(shelterId, req.body)
+                            .then(
+                                row=>{
+                                    if(row.formUrl){
+                                        getShelterQuestions(row)
+                                            .then(data=>{
+                                                    if(data){
+                                                        const shelterFormatter = new ShelterFormatter(formUrl, shelterId);
+                                                        shelterFormatter.getCleanPage()
+                                                            .then(res.send);
+                                                    }
+                                                    showShelter(row,res)
+                                            }
+                                        )
+                                    }
+                                    showShelter(row,res);
+                                },
+                                err=>errorHandler(err,res)
+                            )
+                    },
+                    err=>errorHandler(err,res)
+                );
+ 
         })
         .delete((req, res) => {
-            const api_id = req.params.id;
-            dbHandler.findById("shelters",api_id).then(row => {
+            // NEEDS TO ALSO REMOVE SHELTER QUESTIONS
+            const shelterId = req.params.id;
+            dbHandler.findById("shelters",shelterId).then(row => {
                 if(row){
-                    dbHandler.deleteData("shelters",api_id)
+                    dbHandler.deleteData("shelters",shelterId)
                         .then(()=>{
                             res.redirect(`/shelters`);
                         });
                 }else{
                     res.render(
                         "error",
-                        {error:`ID: ${api_id} not found`}
+                        {error:`ID: ${shelterId} not found`}
                     );
                 }
             });

@@ -24,9 +24,10 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Listening on port: ${port}`));
 
 
-const ShelterFormatter = require("./shelterFormatter");
+// const ShelterFormatter = require("./shelterFormatter");
 const DbHandler = require("./dbHandler");
-// const URL = "http://www.badassbrooklynanimalrescue.com/adoption-app";
+const URL = "http://www.badassbrooklynanimalrescue.com/adoption-app";
+// new ShelterFormatter(URL);
 
 let dbHandler = new DbHandler;
 
@@ -36,5 +37,10 @@ shelterController(app,dbHandler);
 
 // ROUTES
 app.get('/', function (request, response) {
-  response.render("index");
+  // response.render("index");
+  dbHandler.findById("shelters","NY447")
+    .then(row=>{
+      console.log(row);
+      response.send(row)
+    })
 });

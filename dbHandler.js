@@ -17,7 +17,7 @@ module.exports = class DbHandler {
         this.db.run("CREATE TABLE 'users' ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL UNIQUE, `salt` TEXT, `password` TEXT NOT NULL )");
         this.db.run("CREATE TABLE `shelters` ( `api_id` TEXT, `name` TEXT, `location` TEXT, `contact` TEXT, `url` TEXT, `formUrl` TEXT )");
         this.db.run("CREATE TABLE `questions` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `shelterId` INTEGER NOT NULL, `formInputName` TEXT NOT NULL, `metaAnswerId` INTEGER NOT NULL );");
-        this.db.run("CREATE TABLE `metaAnswers` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `inputType` INTEGER DEFAULT 'text' )");
+        this.db.run("CREATE TABLE `metaAnswers` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `inputType` TEXT DEFAULT 'text' )");
         this.db.run("CREATE TABLE `answers` ( `userId` INTEGER NOT NULL, `metaId` INTEGER, `value` BLOB)"); 
     }
     
@@ -92,6 +92,9 @@ module.exports = class DbHandler {
     }
     find_questions_by_id_statement(){
         return "SELECT * FROM questions WHERE id=? LIMIT 1";
+    }
+    find_questions_by_shelterId_statement(){
+        return "SELECT * FROM questions WHERE shelterId=?";
     }
     find_metaAnswers_by_id_statement(){
         return "SELECT * FROM metaAnswers WHERE id=? LIMIT 1";
