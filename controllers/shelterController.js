@@ -1,6 +1,7 @@
 var fetch = require("node-fetch");
 const API_KEY = process.env.API_KEY;
 const ShelterFormatter = require("../shelterFormatter");
+const KEY_ITERATION_SEPERATOR = "-!-";
 
 module.exports = function (app, dbHandler) {
     const BASE_URL = "http://api.petfinder.com/";
@@ -33,96 +34,99 @@ module.exports = function (app, dbHandler) {
 
     const findOrCreateShelterFromAPI = shelter => {
         return new Promise((res,rej)=>{
-            const shelterId = shelter.id.$t;
-            dbHandler.findById("shelters",shelterId).then(row => {
-                if(row) res(row);
-                dbHandler.insertData(
-                    "shelters",
-                    shelter.id.$t,
-                    shelter.name.$t,
-                    `${shelter.zip.$t} ${shelter.city.$t}, ${shelter.state.$t}`,
-                    shelter.email.$t,
-                    null,
-                    null
-                )
-                .then(dbShelter=>res(dbShelter));
-            });
+            const shelterApiId = shelter.id.$t;
+            validShelter(shelterApiId)
+                .then(res)
+                .catch(err=>{
+                    dbHandler.insertData(
+                        "shelters",
+                        shelter.id.$t,
+                        shelter.name.$t,
+                        `${shelter.zip.$t} ${shelter.city.$t}, ${shelter.state.$t}`,
+                        shelter.email.$t,
+                        null,
+                        null
+                    )
+                    .then(data=>{
+                        if(typeof data === "number"){
+                            dbHandler.findById("shelters",data).then(res);
+                        }else if(typeof data === "object"){
+                            res(data)
+                        }else{
+                            rej(`Data found was of wrong type: ${typeof data}`);
+                        }
+                    })
+                    .catch(rej)
+                });
         });
     }
-    
-    // const parseFormUrl = URL => {
-    //     return new Promise((res,rej)=>{
-    //         fetch(URL)
-    //             .then(response=>response.text())
-    //             .then(htmlText=>{
-    //                 const start = htmlText.search(/<form/);
-    //                 const end = htmlText.search(/form>/);
-    //                 if(start < 0 || end < 0) rej("Could not find a form tag");
-    //                 res(htmlText.slice(start, end+1));
-    //             }, err=>errorHandler(err))
-    //     });
-    // }
 
     const createShelterQuestions = (shelterId, params)=>{
-        // shelterValidity already checked
-        // SHOULD ADD to META ANSWERS
-        return new Promise((res,rej)=>{
-            for(const i in params){
-
+        const data = [];
+        for(const key in params){
+            const values = params[key];
+            if(Array.isArray(values)){
+                for(let i = 0; i<values.length; i++){
+                    data.push([
+                        shelterId,
+                        key + KEY_ITERATION_SEPERATOR + i
+                    ])
+                }
+            }else{
+                data.push([
+                    shelterId,
+                    key
+                ]);
             }
-        });
+        }
+        return dbHandler.insertMultiple("questions",data);
     }
 
     const getShelterQuestions = shelter =>{
-        console.log(shelter);
-        const shelterId = shelter.api_id;
         return new Promise((res,rej)=>{
-            const statement = dbHandler.find_questions_by_shelterId_statement();
-            dbHandler.queryDb(statement,shelterId)
-                .then(res)
-                .catch(rej);
-        });
+            dbHandler.findById("questionsByShelterId",shelter.id)
+                .then(rows=>res(rows.length))
+                .catch(rej)
+        })
     }
 
     /**
      * Takes array of api shelter objects and returns array of db shelter obj.
      */
-    async function getDbShelters(shelters){
-        const output = [];
-        
-        const addShelter = shelter => {
-            return new Promise((res,rej)=>{
-                findOrCreateShelterFromAPI(shelter)
-                    .then(data => {
-                        output.push(data)
-                        res();
-                    });
-            })
-        }
-        
-        async function loopShelters(){
-            for (const shelter of shelters) {
-                await addShelter(shelter);
-            }
-        }
-
-        await loopShelters();
+    function getDbShelters(shelters){
         return new Promise((res, rej) => {
-            res(output);
+
+            const output = [];
+            
+            const addShelter = shelter => {
+                return new Promise((res,rej)=>{
+                    findOrCreateShelterFromAPI(shelter)
+                    .then(res)
+                    .catch(rej)
+                })
+            }
+
+            (async () => {
+                for (const shelter of shelters) {
+                    const data = await addShelter(shelter);
+                    output.push(data);
+                }
+                res(output);
+            })();
         });
     }
 
-    const validShelter = shelterId =>{
+    const validShelter = shelterApiId =>{
         return new Promise((res, rej)=>{
-            dbHandler.findById("shelters",shelterId).then(row => {
+            dbHandler.findById("sheltersByApiId",shelterApiId).then(row => {
                 if(row) res(row);
-                rej(`Shelter Id: ${shelterId} could not be found`);
+                rej(`Shelter Id: ${shelterApiId} could not be found`);
             })
         })
     }
 
     const updateShelter = function(shelter,newShelterData){
-        const shelterId = shelter.api_id;
+        const shelterId = shelter.id;
         return new Promise((res,rej)=>{
             dbHandler.updateData("shelters",[
                 newShelterData.name,
@@ -131,21 +135,22 @@ module.exports = function (app, dbHandler) {
                 newShelterData.url,
                 newShelterData.formUrl,
                 shelterId
-            ]).then(data=>{
-                res(shelter,data)
+            ]).then(numOfRows=>{
+                res([shelter,numOfRows])
             }).catch(rej);
         })
     }
 
-    const handleForm = (shelter,data) => {
+    const handleForm = ([shelter,numOfRows]) => {
         return new Promise((res,rej)=>{
-            if(data!=1) res(shelter,data);
+            if(numOfRows!=1) res([numOfRows,shelter]);
             if(shelter.formUrl){
+                if(shelter.formUrl.length===0) res([null,shelter])
                 getShelterQuestions(shelter)
-                    .then(data=>res(shelter,data))
-                    .catch(rej);
+                    .then(rows=>res([rows,shelter]))
+                    .catch(rej)
             }else{
-                res(shelter);
+                res([null,shelter]);
             }
         });
     }
@@ -169,15 +174,13 @@ module.exports = function (app, dbHandler) {
             .then(
                 data => res.render("shelters", {
                     "shelters": data
-                }),
-                err => errorHandler(err,res)
-            );
+                })
+            )
+            .catch(err => errorHandler(err,res))
     });
 
     app.post("/shelters/zip", (req, res) => {
         const zip = req.body.zip;
-        getApiShelters(zip)
-            .then(array => getDbShelters(array));
         res.redirect(`/shelters/zip/${zip}`);
     });
 
@@ -191,36 +194,37 @@ module.exports = function (app, dbHandler) {
     app.route("/shelters/id/:id")
         .get((req, res) => {
             // SHOULD INCLUDE QUESTIONS
-            const shelterId = req.params.id;
-            validShelter(shelterId)
+            const shelterApiId = req.params.id;
+            validShelter(shelterApiId)
                 .then(row=>showShelter(row,res))
                 .catch(err=>errorHandler(err,res));
         })
         .post((req,res)=>{
-            const shelterId = req.params.id;
-            validShelter(shelterId)
+            const shelterApiId = req.params.id;
+            validShelter(shelterApiId)
                 .then(getShelterQuestions,err=>errorHandler(err,res))
                 .then(data=>{
-                    if(data) res.redirect(`shelters/id/${shelterId}`);
-                    createShelterQuestions(shelterId, req.body)
-                        .then(()=>{
-                            res.redirect(`shelters/id/${shelterId}`);
-                        })
+                    if(data) res.redirect(`shelters/id/${shelterApiId}`);
+                    return dbHandler.findById("sheltersByApiId",shelterApiId)
+                        .then(shelter=>createShelterQuestions(shelter.id, req.body))
+                }).catch(err=>errorHandler(err, res))
+                .then(()=>{
+                    res.redirect(`/shelters/id/${shelterApiId}`);
                 })
         })
         .put((req, res) => {
-            const shelterId = req.params.id;
-            validShelter(shelterId)
-                .then(row=>updateShelter(row,req.body),err=>errorHandler(err,res))
-                .then(handleForm,err=>errorHandler(err,res))
-                .then(
-                    (shelter,data)=>{
-                        console.log("shelter: ", shelter)
-                        console.log("data: ", data);
-                        if(data){
-                            const shelterFormatter = new ShelterFormatter(formUrl, shelterId);
+            const shelterApiId = req.params.id;
+            validShelter(shelterApiId)
+                .then(row=>updateShelter(row,req.body))
+                .then(handleForm)
+                .then(data=>{
+                        const [rowNum, shelter] = data;
+                        const shelterApiId = shelter.api_id;
+                        if(rowNum===0){
+                            const shelterFormatter = new ShelterFormatter(shelter.formUrl, shelterApiId);
                             shelterFormatter.getCleanPage()
-                                .then(res.send);
+                                .then(data=>res.send(data)) // https://stackoverflow.com/questions/41801723/express-js-cannot-read-property-req-of-undefined
+                                .catch(err=>errorHandler(err,res))
                         }else{
                             showShelter(shelter,res);
                         }
@@ -229,15 +233,18 @@ module.exports = function (app, dbHandler) {
                 )
         })
         .delete((req, res) => {
-            // NEEDS TO ALSO REMOVE SHELTER QUESTIONS
-            const shelterId = req.params.id;
-            validShelter(shelterId)
+            const shelterApiId = req.params.id;
+            validShelter(shelterApiId)
                 .then(row=>{
-                    dbHandler.deleteData("shelters",shelterId)
-                        .then(()=>{
-                            res.redirect(`/shelters`);
-                        });
-                })
-                .catch(err=>errorHandler(err, res));
+                    return dbHandler.deleteData("shelters",shelterApiId)
+                }).catch(err=>errorHandler(err, res))
+                .then(num=>{
+                    console.log(`${num} selter(s) deleted`);
+                    return dbHandler.deleteData("questionsByShelterApiId",shelterApiId);
+                }).catch(err=>errorHandler(err, res))
+                .then(num=>{
+                    console.log(`${num} questions(s) deleted`);
+                    res.redirect(`/shelters`);
+                }).catch(err=>errorHandler(err, res))
         });
 }

@@ -37,10 +37,5 @@ shelterController(app,dbHandler);
 
 // ROUTES
 app.get('/', function (request, response) {
-  // response.render("index");
-  dbHandler.findById("shelters","NY447")
-    .then(row=>{
-      console.log(row);
-      response.send(row)
-    })
+  response.render("index");
 });

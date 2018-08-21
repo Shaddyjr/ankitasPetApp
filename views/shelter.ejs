@@ -11,9 +11,13 @@
         <h1><%= shelter.name%></h1>
         <p>Located: <%= shelter.location %></p>
         <p>Contact: <%= shelter.contact %></p>
-        <a href="<%=shelter.url%>">Website</a>
-        <a href="<%=shelter.urlForm%>">Original Form</a>
-
+        <% if (shelter.url){%>
+            <a href="<%=shelter.url%>">Website</a>
+        <% } %>
+        
+        <% if (shelter.urlForm){%>
+            <a href="<%=shelter.urlForm%>">Original Form</a>
+        <% } %>
         <h2>Edit</h2>
         <form method="post">
             <input type="hidden" name="_method" value="put">

@@ -1,9 +1,9 @@
 var fetch = require("node-fetch");
 const { JSDOM } = require("jsdom");
 module.exports = class ShelterFormatter{
-    constructor(URL,id){
+    constructor(URL,shelterApiId){
         this.URL = URL;
-        this.shelterId = id;
+        this.shelterApiId = shelterApiId;
     }
     
     getCleanPage(){
@@ -18,8 +18,7 @@ module.exports = class ShelterFormatter{
     }
 
     getPage(html){
-        const dom = new JSDOM(html);
-        return this.sterilizeDomForm(dom);
+        return this.sterilizeDomForm(new JSDOM(html));
     }
 
     sterilizeDomForm(dom){
@@ -29,37 +28,8 @@ module.exports = class ShelterFormatter{
             new_form.appendChild(old_form.childNodes[0]);
         }
         old_form.parentNode.replaceChild(new_form, old_form);
-        new_form.action = `/shelters/${this.shelterId}`
+        new_form.action = `/shelters/id/${this.shelterApiId}`
         new_form.method = "POST";
         return dom;
-    }
-
-    /**
-     * Grabs the first form element from the given string and returns only form as a string.
-     */
-    // getForm(htmlText){
-    //     return new Promise((res, rej)=>{
-    //         const start = htmlText.search(/<form/);
-    //         const end = htmlText.search(/form>/);
-    //         if(start < 0 || end < 0) rej("Could not find a form tag");
-    //         res(htmlText.slice(start, end+5));
-    //     });
-    // }
-    
-    /**
-     * Removes all classes from the element and all of its children nodes.
-     */
-    // removeClasses(element){
-    //     const children = element.childNodes;
-    //     if(children.length > 0){
-    //         for(const child of children){
-    //             child.className = "";
-    //             this.removeClasses(child);
-    //         }
-    //     }
-    // }
-
-    handleError(err){
-        console.log(err);
     }
 }

@@ -9,14 +9,14 @@ module.exports = class DbHandler {
         this.db = db;
         if(!fs.existsSync(dbFile)){
             this.createTables();
-            this.addDummyData();
+            // this.addDummyData();
         }
     }
 
     createTables() {
         this.db.run("CREATE TABLE 'users' ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL UNIQUE, `salt` TEXT, `password` TEXT NOT NULL )");
-        this.db.run("CREATE TABLE `shelters` ( `api_id` TEXT UNIQUE, `name` TEXT, `location` TEXT, `contact` TEXT, `url` TEXT, `formUrl` TEXT )");
-        this.db.run("CREATE TABLE `questions` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `shelterId` INTEGER NOT NULL, `formInputName` TEXT NOT NULL, `metaAnswerId` INTEGER NOT NULL );");
+        this.db.run("CREATE TABLE `shelters` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `api_id` TEXT UNIQUE, `name` TEXT, `location` TEXT, `contact` TEXT, `url` TEXT, `formUrl` TEXT )");
+        this.db.run("CREATE TABLE `questions` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `shelterId` INTEGER NOT NULL, `formInputName` TEXT NOT NULL, `metaAnswerId` INTEGER);");
         this.db.run("CREATE TABLE `metaAnswers` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `inputType` TEXT DEFAULT 'text' )");
         this.db.run("CREATE TABLE `answers` ( `userId` INTEGER NOT NULL, `metaId` INTEGER, `value` BLOB)"); 
     }
@@ -37,9 +37,50 @@ module.exports = class DbHandler {
     questions_insert_statement() {
         return "INSERT INTO questions (shelterId, formInputName, metaAnswerId) VALUES (?,?,?)";
     }
+    questions_insert_base_statement() {
+        return "INSERT INTO questions (shelterId, formInputName) VALUES ";
+    }
 
     metaAnswers_insert_statement() {
         return "INSERT INTO metaAnswers (name, inputType) VALUES (?,?)";
+    }
+
+    insertMultiple(table,data){
+        // data is a 2D array of values for each insert
+        let statementBase;
+        switch(table){
+            case "questions":
+                statementBase = this.questions_insert_base_statement();
+                break;
+            default:
+                console.log(`Couldn't find table ${table}`);
+                return;
+        }
+        const valueArr = [];
+        const flatData = [];
+        for(const value of data){
+            const valueString = value.map(val=>"?").join(",");
+            valueArr.push(`(${valueString})`);
+            value.forEach(val=>flatData.push(val));
+        }
+        const statement = statementBase + valueArr.join(",");
+        return this.queryDb(statement,flatData);
+    }
+
+    /**
+     * Returns promise that resolves id of row added.
+     */
+    insertDb(query, data){
+        return new Promise((res, rej)=>{
+            this.db.run(
+                query,
+                data,
+                function(err){
+                    if(err) rej(err);
+                    res(this.lastID);
+                }
+            );
+        });
     }
 
     insertData(table, ...data) {
@@ -64,7 +105,7 @@ module.exports = class DbHandler {
                 console.log(`Could not find table: ${table}`)
                 return;
         }
-        return this.queryDb(query, data);
+        return this.insertDb(query, data);
     }
 
     // READ //
@@ -88,6 +129,9 @@ module.exports = class DbHandler {
         return "SELECT * FROM users WHERE id=? LIMIT 1";
     }
     find_shelters_by_id_statement(){
+        return "SELECT * FROM shelters WHERE id=? LIMIT 1";
+    }
+    find_shelters_by_api_id_statement(){
         return "SELECT * FROM shelters WHERE api_id=? LIMIT 1";
     }
     find_questions_by_id_statement(){
@@ -109,6 +153,9 @@ module.exports = class DbHandler {
             case "shelters":
                 query = this.find_shelters_by_id_statement();
                 break;
+            case "sheltersByApiId":
+                query = this.find_shelters_by_api_id_statement();
+                break;
             case "questions":
                 query = this.find_questions_by_id_statement();
                 break;
@@ -118,6 +165,9 @@ module.exports = class DbHandler {
             case "answers":
                 query = this.find_answers_by_id_statement();
                 break;
+            case "questionsByShelterId":
+                query = this.find_questions_by_shelterId_statement();
+                return this.queryDb(query,id);
             default:
                 console.log(`Could not find table: ${table}`)
                 return;
@@ -140,9 +190,12 @@ module.exports = class DbHandler {
 
     // UPDATE //
     users_update_statement(){
-        return "UPDATE answers SET username=?, salt=?, password=? WHERE id=?;";
+        return "UPDATE users SET username=?, salt=?, password=? WHERE id=?;";
     }
     shelters_update_statement(){
+        return "UPDATE shelters SET name=?, location=?, contact=?, url=?, formUrl=? WHERE id=?;";
+    }
+    shelters_update_by_api_id_statement(){
         return "UPDATE shelters SET name=?, location=?, contact=?, url=?, formUrl=? WHERE api_id=?;";
     }
     questions_update_statement(){
@@ -152,7 +205,7 @@ module.exports = class DbHandler {
         return "UPDATE metaAnswers SET name=?, inputType=? WHERE id=?;";
     }
     answers_update_statement(){
-        return "UPDATE users SET userId=?, metaId=?, value=? WHERE id=?;";
+        return "UPDATE answers SET userId=?, metaId=?, value=? WHERE id=?;";
     }
 
     updateData(table, data){
@@ -163,6 +216,9 @@ module.exports = class DbHandler {
                 break;
             case "shelters":
                 query = this.shelters_update_statement();
+                break;
+            case "sheltersByApiId":
+                query = this.shelters_update_by_api_id_statement();
                 break;
             case "questions":
                 query = this.questions_update_statement();
@@ -212,6 +268,9 @@ module.exports = class DbHandler {
     answers_delete_statement(){
         return "DELETE FROM users WHERE id=?;";
     }
+    questions_delete_by_shelterApiId_statement(){
+        return "DELETE FROM questions JOIN shelters ON shelters.id=questions.shelterId WHERE shelters.api_id=?;";
+    }
 
     deleteData(table, data){
         let query;
@@ -231,11 +290,14 @@ module.exports = class DbHandler {
             case "answers":
                 query = this.answers_delete_statement();
                 break;
+            case "questionsByShelterApiId":
+                query = this.questions_delete_by_shelterApiId_statement();
+                break;
             default:
                 console.log(`Could not find table: ${table}`)
                 return;
         }
-        return this.queryDb(query, data);
+        return this.updateDb(query, data);
     }
 
     queryDb(str, data){
