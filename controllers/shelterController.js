@@ -135,19 +135,20 @@ module.exports = function (app, dbHandler) {
                 newShelterData.url,
                 newShelterData.formUrl,
                 shelterId
-            ]).then(numOfRows=>{
-                res([shelter,numOfRows])
-            }).catch(rej);
+            ])
+                .then(numOfRowsChanged=>dbHandler.findById("shelters",shelterId))
+                .then(res)
+                .catch(rej);
         })
     }
 
-    const handleForm = ([shelter,numOfRows]) => {
+    const handleForm = shelter => {
         return new Promise((res,rej)=>{
-            if(numOfRows!=1) res([numOfRows,shelter]);
+            if(!shelter) res([null,shelter]);
             if(shelter.formUrl){
                 if(shelter.formUrl.length===0) res([null,shelter])
                 getShelterQuestions(shelter)
-                    .then(rows=>res([rows,shelter]))
+                    .then(questions=>res([questions,shelter]))
                     .catch(rej)
             }else{
                 res([null,shelter]);
@@ -217,10 +218,11 @@ module.exports = function (app, dbHandler) {
             validShelter(shelterApiId)
                 .then(row=>updateShelter(row,req.body))
                 .then(handleForm)
-                .then(data=>{
-                        const [rowNum, shelter] = data;
+                .then(
+                    shelterQuestions=>{
+                        const [questions, shelter] = shelterQuestions;
                         const shelterApiId = shelter.api_id;
-                        if(rowNum===0){
+                        if(questions===0){
                             const shelterFormatter = new ShelterFormatter(shelter.formUrl, shelterApiId);
                             shelterFormatter.getCleanPage()
                                 .then(data=>res.send(data)) // https://stackoverflow.com/questions/41801723/express-js-cannot-read-property-req-of-undefined

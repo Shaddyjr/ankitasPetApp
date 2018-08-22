@@ -237,7 +237,7 @@ module.exports = class DbHandler {
     }
 
     /**
-     * Returns promise that resolves number of rows changed.
+     * Returns promise that resolves lastID of rows changed.
      */
     updateDb(query, data){
         return new Promise((res, rej)=>{

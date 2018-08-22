@@ -1,6 +1,7 @@
 require('dotenv').load();
 var express = require('express');
 var bodyParser = require('body-parser');
+var path = require('path');
 var app = express();
 var methodOverride = require('method-override');
 
@@ -18,7 +19,7 @@ app.use(methodOverride(function (req, res) {
     return method
   }
 }))
-app.use(express.static('public'));
+app.use("/static",express.static(path.join(__dirname, 'public')));
 // listen for requests :)
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Listening on port: ${port}`));
