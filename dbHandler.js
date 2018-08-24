@@ -17,7 +17,7 @@ module.exports = class DbHandler {
         this.db.run("CREATE TABLE 'users' ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL UNIQUE, `salt` TEXT, `password` TEXT NOT NULL )");
         this.db.run("CREATE TABLE `shelters` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `api_id` TEXT UNIQUE, `name` TEXT, `location` TEXT, `contact` TEXT, `url` TEXT, `formUrl` TEXT )");
         this.db.run("CREATE TABLE `questions` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `shelterId` INTEGER NOT NULL, `formInputName` TEXT NOT NULL, `metaAnswerId` INTEGER);");
-        this.db.run("CREATE TABLE `metaAnswers` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `inputType` TEXT DEFAULT 'text' )");
+        this.db.run("CREATE TABLE `metaAnswers` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `inputType` TEXT DEFAULT 'text', `description` TEXT )");
         this.db.run("CREATE TABLE `answers` ( `userId` INTEGER NOT NULL, `metaId` INTEGER, `value` BLOB)"); 
     }
     
@@ -117,6 +117,10 @@ module.exports = class DbHandler {
         const query = "SELECT * FROM metaAnswers;";
         return this.queryDb(query);
     }
+    getQuestions(){
+        const query = "SELECT * FROM questions;";
+        return this.queryDb(query);
+    }
     getUsers(){
         const query = "SELECT * FROM users;";
         return this.queryDb(query);
@@ -140,6 +144,9 @@ module.exports = class DbHandler {
     find_questions_by_shelterId_statement(){
         return "SELECT * FROM questions WHERE shelterId=?";
     }
+    find_questions_by_with_shelter_statement(){
+        return "SELECT * FROM questions JOIN shelters ON questions.shelterId=shelters.id WHERE questions.id=?;";
+    }
     find_metaAnswers_by_id_statement(){
         return "SELECT * FROM metaAnswers WHERE id=? LIMIT 1";
     }
@@ -159,15 +166,18 @@ module.exports = class DbHandler {
             case "questions":
                 query = this.find_questions_by_id_statement();
                 break;
+            case "questionsByShelterId":
+                query = this.find_questions_by_shelterId_statement();
+                return this.queryDb(query,id);
+            case "questionsWithShelter":
+                query = this.find_questions_by_with_shelter_statement();
+                break;
             case "metaAnswers":
                 query = this.find_metaAnswers_by_id_statement();
                 break;
             case "answers":
                 query = this.find_answers_by_id_statement();
                 break;
-            case "questionsByShelterId":
-                query = this.find_questions_by_shelterId_statement();
-                return this.queryDb(query,id);
             default:
                 console.log(`Could not find table: ${table}`)
                 return;
@@ -201,6 +211,9 @@ module.exports = class DbHandler {
     questions_update_statement(){
         return "UPDATE questions SET shelterId=?, formInputName=?, metaAnswerId=? WHERE id=?;";
     }
+    questions_update_metaAnswerId_statement(){
+        return "UPDATE questions SET metaAnswerId=? WHERE id=?;";
+    }
     metaAnswers_update_statement(){
         return "UPDATE metaAnswers SET name=?, inputType=? WHERE id=?;";
     }
@@ -222,6 +235,9 @@ module.exports = class DbHandler {
                 break;
             case "questions":
                 query = this.questions_update_statement();
+                break;
+            case "questionsMetaAnswerId":
+                query = this.questions_update_metaAnswerId_statement();
                 break;
             case "metaAnswers":
                 query = this.metaAnswers_update_statement();

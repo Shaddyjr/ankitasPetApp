@@ -40,7 +40,12 @@
             <input type="submit" value="Delete Shelter"  onclick="return confirm('Are you sure you want to delete this item?');">
         </form>
 
-        
+        <h2>QUESTIONS</h2>
+        <ul>
+            <% for(const question of questions){%>
+                <li><%=question.formInputName %></li>
+            <% } %>
+        </ul>
     </div>
 </body>
 </html>

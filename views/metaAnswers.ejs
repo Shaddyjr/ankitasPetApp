@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>metaAnswers</title>
+    <link rel="stylesheet" href="./static/style.css">
+</head>
+<body>
+    <% for(const question of questions){ %>
+        <form class="question" method="POST" action="/question/<%=question.id%>">
+            <input type="hidden" name="_method" value="put">
+            <p><%=question.shelterId%></p>
+            <p><%=question.formInputName%></p>
+            <p><%=question.metaAnswerId%></p>
+            <!-- <input list="browsers" name="browser">
+            <datalist id="browsers">
+              <option value="Internet Explorer">
+              <option value="Firefox">
+              <option value="Chrome">
+              <option value="Opera">
+              <option value="Safari">
+            </datalist> -->
+            <input type="submit" value="SUBMIT">
+        </form>
+    <% } %>
+</body>
+</html>

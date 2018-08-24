@@ -32,9 +32,13 @@ const URL = "http://www.badassbrooklynanimalrescue.com/adoption-app";
 
 let dbHandler = new DbHandler;
 
-// loading controllers
+// loading controllers - SHOULD BE ABSTRACTED
 const shelterController = require("./controllers/shelterController");
 shelterController(app,dbHandler);
+const metaAnswerController = require("./controllers/metaAnswerController");
+metaAnswerController(app,dbHandler);
+const questionController = require("./controllers/questionController");
+questionController(app,dbHandler);
 
 // ROUTES
 app.get('/', function (request, response) {

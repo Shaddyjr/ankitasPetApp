@@ -3,6 +3,7 @@ const API_KEY = process.env.API_KEY;
 const ShelterFormatter = require("../shelterFormatter");
 const KEY_ITERATION_SEPERATOR = "-!-";
 
+// SHOULD INCLUDE PARAM VALIDATION
 module.exports = function (app, dbHandler) {
     const BASE_URL = "http://api.petfinder.com/";
 
@@ -185,11 +186,19 @@ module.exports = function (app, dbHandler) {
         res.redirect(`/shelters/zip/${zip}`);
     });
 
-    const showShelter = (row,res) =>{
-        res.render(
-            "shelter",
-            {"shelter":row}
-        )
+    const showShelter = (shelter,res) =>{
+        // Get questions for shelter
+        const shelterId = shelter.id;
+        dbHandler.findById("questionsByShelterId",shelterId)
+            .then(questions=>{
+                res.render(
+                    "shelter",
+                    {
+                        "shelter":shelter,
+                        "questions":questions
+                    }
+                )
+            })
     }
 
     app.route("/shelters/id/:id")
