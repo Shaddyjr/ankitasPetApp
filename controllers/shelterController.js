@@ -258,4 +258,30 @@ module.exports = function (app, dbHandler) {
                     res.redirect(`/shelters`);
                 }).catch(err=>errorHandler(err, res))
         });
+
+    async function getFormsAndMetas(shelter){
+        const shelterId = shelter.id;
+        const formIds = await dbHandler.findById("questionsByShelterId",shelterId);
+        const metaAnswers = await dbHandler.getMetaAnswers();
+        return {
+            "shelter": shelter,
+            "formIds":formIds.map(formId=>formId.formInputName),
+            "metaAnswers":metaAnswers.map(metaAnswer=>metaAnswer.name)
+        }
+    }
+    app.get("/shelter/id/:id/visitForm",(req,res)=>{
+        const shelterApiId = req.params.id;
+        validShelter(shelterApiId)
+            .then(getFormsAndMetas)
+            .then(data=>{
+                const {shelter, formIds, metaAnswers} = data;
+                const shelterFormatter = new ShelterFormatter(shelter.formUrl, shelterApiId);
+                shelterFormatter.getMetaAnswerPage(formIds, metaAnswers)
+                    .then(html=>{
+                        req.send(html);
+                    })
+                    .catch(err=>errorHandler(err,req))
+            })
+            .catch(err=>errorHandler(err,req))
+    })
 }

@@ -1,12 +1,20 @@
+// SHOULD INCLUDE PARAMS VALIDATION
 module.exports = function (app, dbHandler) {
+
     app.route("/metaAnswers")
         .get((req,res)=>{
-            dbHandler.getQuestions()
-                .then(questions=>{
-                    res.render("metaAnswers",{
-                        "questions":questions
-                    });
+            dbHandler.getFullQuestions()
+                .then(
+                    questions=>{
+                        res.render("metaAnswers",{
+                            "questions":questions
+                        }
+                    )
                 })
+        })
+        .post((req,res)=>{
+            const params = req.params;
+            console.log(params);
         })
     
     app.route("/metaAnswers/:id")

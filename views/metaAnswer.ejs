@@ -5,10 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>metaAnswer</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <%= metaAnswer.name %>
-    <%= metaAnswer.inputType %>
-    <%= metaAnswer.description %>
+        <table class="metaAnswer">
+            <tr>
+                <th>Name</th>
+                <th>Input Type</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><%= metaAnswer.name %></td>
+                <td><%= metaAnswer.inputType %></td>
+                <td><%= metaAnswer.description %></td>
+            </tr>
+        </table>
 </body>
 </html>

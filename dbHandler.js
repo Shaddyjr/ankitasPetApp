@@ -117,8 +117,14 @@ module.exports = class DbHandler {
         const query = "SELECT * FROM metaAnswers;";
         return this.queryDb(query);
     }
+
     getQuestions(){
         const query = "SELECT * FROM questions;";
+        return this.queryDb(query);
+    }
+
+    getFullQuestions(){
+        const query = "SELECT metaAnswers.name AS mName, questions.metaAnswerId, questions.shelterId, shelters.name AS sName, shelters.id, formInputName  FROM questions LEFT JOIN metaAnswers ON questions.metaAnswerId=metaAnswers.id JOIN shelters ON shelters.id=questions.shelterId;";
         return this.queryDb(query);
     }
     getUsers(){

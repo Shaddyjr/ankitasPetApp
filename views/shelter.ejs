@@ -40,10 +40,16 @@
             <input type="submit" value="Delete Shelter"  onclick="return confirm('Are you sure you want to delete this item?');">
         </form>
 
+        <a href="/shelter/id/<%=shelter.api_id%>/visitForm">Visit Form to designate MetaAnswers</a>
+
         <h2>QUESTIONS</h2>
         <ul>
             <% for(const question of questions){%>
-                <li><%=question.formInputName %></li>
+                <li>
+                    <a href="/question/<%=question.id%>">
+                        <%=question.formInputName %>
+                    </a>
+                </li>
             <% } %>
         </ul>
     </div>

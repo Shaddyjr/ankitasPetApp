@@ -1,5 +1,8 @@
-.question{
-    display: grid;
-    grid-template-columns: repeat(4, 200px);
-    grid-template-rows: auto;
+.questions{
+    text-align: center;
+}
+
+.metaAnswer{
+    text-align: center;
+
 }
