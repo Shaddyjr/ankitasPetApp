@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Pets App Home</title>
+    <%include ../partials/head%>
+  </head>
+  <body>
+      <%include ../partials/nav%>
+<main>
+    
+<h1><%= shelter.name%></h1>
+<p>Located: <%= shelter.location %></p>
+<p>Contact: <%= shelter.contact %></p>
+<% if (shelter.url){%>
+    <a href="<%=shelter.url%>">Website</a>
+<% } %>
+
+<% if (shelter.urlForm){%>
+    <a href="<%=shelter.urlForm%>">Original Form</a>
+<% } %>
+<h2>Edit</h2>
+<form method="post">
+    <input type="hidden" name="_method" value="put">
+    <label for="name">name:</label>
+    <input name="name" type="text" value="<%=shelter.name%>">
+    <label for="location">location:</label>
+    <input name="location" type="text" value="<%=shelter.location%>">
+    <label for="contact">contact:</label>
+    <input name="contact" type="text" value="<%=shelter.contact%>">
+    <label for="url">url:</label>
+    <input name="url" type="text" value="<%=shelter.url%>">
+    <label for="formUrl">formUrl:</label>
+    <input name="formUrl" type="text" value="<%=shelter.formUrl%>">
+    <input type="submit" value="Submit">
+</form>
+
+<h2>Delete</h2>
+<form method="post">
+    <input type="hidden" name="_method" value="delete">
+    <input type="submit" value="Delete Shelter"  onclick="return confirm('Are you sure you want to delete this item?');">
+</form>
+
+<a href="/shelters/<%= shelter.api_id %>/submit">Submit Shelter Form (Autocompletes from your MetaForm)</a>
+
+<!-- <a href="/shelter/id/<%=shelter.api_id%>/visitForm">Visit Form to designate MetaAnswers</a> -->
+
+</div>
+</main>
+
+    <footer>
+    <%include ../partials/footer%>
+    </footer>
+  </body>
+</html>

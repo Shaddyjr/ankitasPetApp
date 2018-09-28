@@ -3,6 +3,10 @@
 - Add management of metaAnswers
 - include auto complete of form for user
 
-- add user functionality
-- sessions
-https://github.com/senchalabs/connect#middleware.
+<!-- - add bcrypt -->
+- add front-end validation
+<!-- https://express-validator.github.io/docs/ -->
+- abstract configs (and ignore for push)
+- refactor old code
+- Set up 404
+<!-- https://stackoverflow.com/questions/6528876/how-to-redirect-404-errors-to-a-page-in-expressjs -->

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Pets App Home</title>
+    <%include ../partials/head%>
+  </head>
+  <body>
+      <%include ../partials/nav%>
+
+      <%if (isAuthenticated){%>
+        <blockquote class="blockquote bq-success">
+          <p class="bq-title">Welcome!</p>
+          <p>Remember to fill out your MetaForm! You can find it in your Profile!</p>
+        </blockquote>
+        <%}%>
+      <main>
+        <h1>
+          This is what this app is all about
+        </h1>
+        <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Suscipit doloremque vel aut deserunt ad, sit delectus alias voluptas ipsam facilis quae omnis commodi tempore, mollitia debitis illum provident optio? Est sapiente sed similique officiis sequi odit, qui animi neque tenetur dolore, quae illo vitae cum unde molestias iusto ipsa voluptatum ex laudantium eaque debitis. Ad impedit ipsa maxime maiores porro eaque dolores quibusdam praesentium, a dolorem iusto, quaerat cum quam molestiae nemo possimus fugit sint molestias aliquam quod ut facere, expedita perspiciatis aut. Ex explicabo, placeat dolorem, quidem quaerat, ipsa voluptatem animi quibusdam tenetur voluptate alias! Doloremque ullam, hic non obcaecati, saepe dolorem consequuntur perferendis enim debitis veritatis quidem officia sunt, omnis reiciendis! Provident esse doloremque, vero voluptate fugiat minima!</p>
+      </main>
+    <footer>
+    <%include ../partials/footer%>
+    </footer>
+  </body>
+</html>

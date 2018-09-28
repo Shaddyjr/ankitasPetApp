@@ -1,16 +1,6 @@
-// init sqlite db
-var fs = require('fs');
-var dbFile = './.data/petApp.db';
-var sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database(dbFile);
-
 module.exports = class DbHandler {
     constructor() {
-        this.db = db;
-        if(!fs.existsSync(dbFile)){
-            this.createTables();
-            // this.addDummyData();
-        }
+        this.db = require("./db");
     }
 
     createTables() {
@@ -138,6 +128,10 @@ module.exports = class DbHandler {
     find_users_by_id_statement(){
         return "SELECT * FROM users WHERE id=? LIMIT 1";
     }
+    find_users_by_username(){
+        return "SELECT * FROM users WHERE username=? LIMIT 1";
+    }
+
     find_shelters_by_id_statement(){
         return "SELECT * FROM shelters WHERE id=? LIMIT 1";
     }
@@ -162,6 +156,9 @@ module.exports = class DbHandler {
         switch (table) {
             case "users":
                 query = this.find_users_by_id_statement();
+                break;
+            case "usersByUsername":
+                query = this.find_users_by_username();
                 break;
             case "shelters":
                 query = this.find_shelters_by_id_statement();

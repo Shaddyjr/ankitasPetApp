@@ -260,12 +260,16 @@ module.exports = function (app, dbHandler) {
         });
 
     async function getFormsAndMetas(shelter){
+        if(shelter.formUrl===null) return {"error":"empty form URL"};
+
         const shelterId = shelter.id;
+
         const formIds = await dbHandler.findById("questionsByShelterId",shelterId);
         const metaAnswers = await dbHandler.getMetaAnswers();
+        console.log("finished with getFormsAndMetas");
         return {
             "shelter": shelter,
-            "formIds":formIds.map(formId=>formId.formInputName),
+            "formIds": formIds.map(formId=>formId.formInputName),
             "metaAnswers":metaAnswers.map(metaAnswer=>metaAnswer.name)
         }
     }
@@ -274,14 +278,19 @@ module.exports = function (app, dbHandler) {
         validShelter(shelterApiId)
             .then(getFormsAndMetas)
             .then(data=>{
+                if(data.error){
+                    return errorHandler(data.error, res);
+                }
                 const {shelter, formIds, metaAnswers} = data;
+                console.log("Creating shelterFormatter");
                 const shelterFormatter = new ShelterFormatter(shelter.formUrl, shelterApiId);
                 shelterFormatter.getMetaAnswerPage(formIds, metaAnswers)
                     .then(html=>{
-                        req.send(html);
+                        console.log("Finished with shelterFormatter");
+                        res.send(html);
                     })
-                    .catch(err=>errorHandler(err,req))
+                    .catch(err=>errorHandler(err,res))
             })
-            .catch(err=>errorHandler(err,req))
+            .catch(err=>errorHandler(err,res))
     })
 }
