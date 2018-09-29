@@ -1,18 +1,6 @@
-.questions{
-    text-align: center;
+.shelter-table a{
+    transition: color 300ms ease;
 }
-
-.metaAnswer{
-    text-align: center;
-
-}
-
-footer{
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 60px;
-    line-height: 60px;
-    background-color: #f5f5f5;
-    text-align: center;
+.shelter-table a:hover{
+    color: red;
 }

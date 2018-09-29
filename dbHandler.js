@@ -1,10 +1,17 @@
+var fs = require('fs');
+var dbFile = './.data/petApp.db';
+
 module.exports = class DbHandler {
     constructor() {
         this.db = require("./db");
+
+        if(!fs.existsSync(dbFile)){
+            this.createTables();
+        }
     }
 
     createTables() {
-        this.db.run("CREATE TABLE 'users' ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL UNIQUE, `salt` TEXT, `password` TEXT NOT NULL )");
+        this.db.run("CREATE TABLE 'users' ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL UNIQUE, `salt` TEXT, `password` TEXT NOT NULL, `email` TEXT, `admin` INTEGER DEFAULT 0 )");
         this.db.run("CREATE TABLE `shelters` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `api_id` TEXT UNIQUE, `name` TEXT, `location` TEXT, `contact` TEXT, `url` TEXT, `formUrl` TEXT )");
         this.db.run("CREATE TABLE `questions` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `shelterId` INTEGER NOT NULL, `formInputName` TEXT NOT NULL, `metaAnswerId` INTEGER);");
         this.db.run("CREATE TABLE `metaAnswers` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `inputType` TEXT DEFAULT 'text', `description` TEXT )");
@@ -17,7 +24,7 @@ module.exports = class DbHandler {
     }
 
     users_insert_statement() {
-        return "INSERT INTO users (username, salt, password) VALUES (?,?,?);";
+        return "INSERT INTO users (username, salt, password, email) VALUES (?,?,?,?);";
     }
 
     shelters_insert_statement() {

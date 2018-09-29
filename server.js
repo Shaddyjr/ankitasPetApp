@@ -1,6 +1,7 @@
 require('dotenv').load(); // required for using .env file
 var express = require('express');
-var validator = require("express-validator");
+var validator = require("express-validator"); // NEED TO IMPLEMENT NEW API
+// https://express-validator.github.io/docs/check-api.html
 var bodyParser = require('body-parser');
 var path = require('path');
 var app = express();

@@ -66,7 +66,7 @@ const findUsername = username => {
     return dbHandler.findById("usersByUsername", username);
 }
 
-const createUser = (username, password) => {
+const createUser = (username, email, password) => {
     return new Promise((resolve, reject) => {
         findUsername(username)
             .then(user => {
@@ -75,7 +75,7 @@ const createUser = (username, password) => {
                     if (err) return reject(err);
                     bcrypt.hash(password, salt, function (err, hash) {
                         if (err) return reject(err);
-                        dbHandler.insertData("users", username, salt, hash)
+                        dbHandler.insertData("users", username, salt, hash, email)
                             .then(newUser => resolve(newUser))
                             .catch(err => reject(err))
                     });
@@ -87,11 +87,10 @@ const createUser = (username, password) => {
 const validateSignup = req => {
     req.checkBody('username', 'Username field cannot be empty.').notEmpty();
     req.checkBody('username', 'Username must be between 4-15 characters long.').len(4, 15);
-    // req.checkBody('email', 'The email you entered is invalid, please try again.').isEmail();
-    // req.checkBody('email', 'Email address must be between 4-100 characters long, please try again.').len(4, 100);
+    req.checkBody('email', 'The email you entered is invalid, please try again.').isEmail();
+    req.checkBody('email', 'Email address must be between 4-100 characters long, please try again.').len(4, 100);
     req.checkBody('password', 'Password must be between 8-100 characters long.').len(8, 100);
     req.checkBody("password", "Password must include one lowercase character, one uppercase character, a number, and a special character.").matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.* )(?=.*[^a-zA-Z0-9]).{8,}$/, "i");
-    // req.checkBody('password2', 'Password must be between 8-100 characters long.').len(8, 100);
     req.checkBody('password2', 'Passwords do not match, please try again.').equals(req.body.password);
 }
 
@@ -107,9 +106,10 @@ router.post('/signup', function (req, res) {
     }
 
     const username = clean(req.body.username);
+    const email = req.body.email;
     const password = req.body.password;
 
-    createUser(username, password)
+    createUser(username, email, password)
         .then(userID => {
             req.login(userID, function (err) {
                 res.redirect("/");
