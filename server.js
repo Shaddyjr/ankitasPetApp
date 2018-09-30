@@ -12,8 +12,7 @@ var passport = require("passport");
 LocalStrategy = require('passport-local').Strategy;
 var SQLiteStore = require('connect-sqlite3')(session);
 const bcrypt = require("bcrypt");
-const DbHandler = require("./dbHandler");
-const dbHandler = new DbHandler;
+const dbHandler = require("./dbHandler");
 // Pathing for public directory
 app.use("/static",express.static(path.join(__dirname, 'public')));
 
@@ -74,25 +73,12 @@ app.listen(port, () => console.log(`Listening on port: ${port}`));
 // passing authentication status to views
 app.use((req,res, next)=>{
   res.locals.isAuthenticated = req.isAuthenticated();
+  res.locals.user = req.user;
   next();
 })
 
-const authenticationHandler = (req, res, next) => {
-  if (req.isAuthenticated()) return next();
-  res.redirect('/login');
-}
-
 // ROUTES
-// Unprotected
-const indexRouter = require('./routes/index');
-app.use('/', indexRouter);
-
-// protected
-const sheltersRouter = require('./routes/shelters');
-app.use('/shelters', authenticationHandler, sheltersRouter);
-
-const userRouter = require('./routes/user');
-app.use('/user', authenticationHandler, userRouter);
+require("./routes/routesHandler")(app, dbHandler);
 
 // LOCAL STRATEGY
 passport.use(new LocalStrategy(
@@ -100,7 +86,7 @@ passport.use(new LocalStrategy(
       verifyUser(username, password).
         then(user => {
                 if (user) return done(null, {
-                    userID: user.id
+                    "user":user
                 });
                 done(null, false);
             })
@@ -110,6 +96,19 @@ passport.use(new LocalStrategy(
   }
 ));
 
+passport.serializeUser(function (user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function (userID, done) {
+  dbHandler.findById("users",userID)
+    .then(user=>{
+      done(null, user);
+    })
+    .catch(err=>{
+      done(err);
+    })
+});
 // Catching last route as 404 - unsuccessful
 app.use((req, res, next)=>{
   res.status = 404;

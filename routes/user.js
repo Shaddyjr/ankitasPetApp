@@ -1,24 +1,35 @@
 const express = require('express');
 const router = express.Router();
-const DbHandler = require("../dbHandler");
-const dbHandler = new DbHandler;
 
-router.get('/:username', function (req, res) {
-    const username = req.params.username;
-    dbHandler.findById("usersByUsername", username)
-        .then(user => {
-            res.render("profile", {
-                username: user.username
-            })
-        })
-        .catch(err => {
-            console.log(err);
-            res.redirect('/logout');
-        })
-});
+/**
+ * Checks if user is an admin.
+ */
+const userIsAdmin = function(req){
+    return req.user.admin === 1;
+}
 
-router.get("/:username/metaForm",function(req,res){
-    res.send("metaForm");
-});
+/**
+ * Checks if user is viewing own profile or someone elses.
+ */
+const userViewingSelf = function(req){
+    if(userIsAdmin(req)) return true;
+    const profile_username = req.params.username;
+    const user_username = req.user.username;
+    return profile_username === user_username;
+}
 
-module.exports = router;
+module.exports = dbHandler => {
+    router.get('/:username', function (req, res) {
+        if(userViewingSelf(req)){
+            res.render("profile");
+        }else{
+            res.redirect("/profile");
+        }
+    });
+
+    router.get("/:username/metaForm", function (req, res) {
+        res.send("metaForm");
+    });
+
+    return router;
+}

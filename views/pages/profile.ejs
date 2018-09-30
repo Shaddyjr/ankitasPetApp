@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Profile for: <%=username %></title>
+    <title>Profile for: <%=user.username %></title>
     <%include ../partials/head%>
 </head>
 
@@ -11,7 +11,7 @@
 
     <h1>Profile</h1>
     
-    <a href="/user/<%=username%>/metaForm">Update Metaform</a>
+    <a href="/user/<%=user.username%>/metaForm">Update Metaform</a>
     <%include ../partials/footer%>
 </body>
 

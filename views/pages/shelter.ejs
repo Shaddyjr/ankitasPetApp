@@ -1,24 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Pets App Home</title>
+    <title>Shelter: <%= shelter.name%></title>
     <%include ../partials/head%>
   </head>
   <body>
       <%include ../partials/nav%>
 <main>
-    
-<h1><%= shelter.name%></h1>
-<p>Located: <%= shelter.location %></p>
-<p>Contact: <%= shelter.contact %></p>
-<% if (shelter.url){%>
-    <a href="<%=shelter.url%>">Website</a>
-<% } %>
+    <div class="container flex-center">
 
-<% if (shelter.urlForm){%>
-    <a href="<%=shelter.urlForm%>">Original Form</a>
-<% } %>
-<h2>Edit</h2>
+    <div class="card w-50 border border-secondary mt-4">
+        <div class="card-header secondary-color-dark
+        lighten-1 white-text"><%= shelter.name%></div>
+        <div class="card-body text-center">
+        <h4 class="card-title">Located: <%= shelter.location %></h4>
+        <p class="card-text">Contact: <a href="mailto:<%= shelter.contact %>"><%= shelter.contact %></a></p>
+
+        <div class="btn-group-vertical w-100" role="group" aria-label="Vertical button group">
+
+        <% if (shelter.url){%>
+            <a href="<%=shelter.url%>" target="_blank" class="btn btn-secondary ml-0">Website</a>
+        <% } %>
+        <% if (shelter.formUrl){%>
+            <a href="<%=shelter.formUrl%>" target="_blank" class="btn btn-outline-secondary waves-effect text-muted">Fill out original form</a>
+        <% } %>
+        <% if (shelter.reviewed===1){%>
+            <a href="/shelters/<%= shelter.api_id %>/submit" class="btn btn-deep-purple text-muted">Submit Shelter Form!</a>
+        <% }else{ %>
+            <a href="/shelters/<%= shelter.api_id %>/review" class="btn btn-outline-warning">Request Review for Shelter Form</a>
+            <small class="form-text text-muted mb-4">Each shelter's adoption form can have unique nuances that require a human to make sense of things</small>
+
+        <% } %>
+    </div>
+    </div>
+</div>
+
+</div>
+<!-- <h2>Edit</h2>
 <form method="post">
     <input type="hidden" name="_method" value="put">
     <label for="name">name:</label>
@@ -32,15 +50,15 @@
     <label for="formUrl">formUrl:</label>
     <input name="formUrl" type="text" value="<%=shelter.formUrl%>">
     <input type="submit" value="Submit">
-</form>
+</form> -->
 
-<h2>Delete</h2>
+<!-- <h2>Delete</h2>
 <form method="post">
     <input type="hidden" name="_method" value="delete">
     <input type="submit" value="Delete Shelter"  onclick="return confirm('Are you sure you want to delete this item?');">
-</form>
+</form> -->
 
-<a href="/shelters/<%= shelter.api_id %>/submit">Submit Shelter Form (Autocompletes from your MetaForm)</a>
+<!-- <a href="/shelters/<%= shelter.api_id %>/submit">Submit Shelter Form (Autocompletes from your MetaForm)</a> -->
 
 <!-- <a href="/shelter/id/<%=shelter.api_id%>/visitForm">Visit Form to designate MetaAnswers</a> -->
 
