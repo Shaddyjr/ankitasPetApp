@@ -40,11 +40,15 @@
                 </thead>
                 <tbody>
                     <%for(const shelter of shelters){%>
-                  <tr class="hoverable">
+                  <tr class="hoverable border border-secondary rounded shelter-row">
                     <th scope="row"><a href="/shelters/<%=shelter.api_id%>"><%=shelter.name%></a></th>
                     <td><%=shelter.location%></td>
                     <td><a href="mailto:<%=shelter.contact%>"><%=shelter.contact%></a></td>
-                    <td><a href="<%=shelter.formUrl%>"><i class="fa fa-lg fa-link" aria-hidden="true"></i></a></td>
+                    <td>
+                        <% if (shelter.formUrl){%>
+                        <a href="<%=shelter.formUrl%>"><i class="fa fa-lg fa-link" aria-hidden="true"></i></a>                            
+                        <%}%>
+                    </td>
                   </tr>
                   <%}%>
                 </tbody>

@@ -24,54 +24,43 @@ module.exports = dbHandler => {
 
     const getShelter = function (req, res, next) {
         const shelterId = req.params.id;
-        dbHandler.findById("sheltersByApiId", shelterId)
-            .then(shelter => {
-                if (!shelter) {
-                    res.redirect("/shelters");
-                } else {
+        // Check DB first
+        shelterController.getShelterFromDB(shelterId)
+            .then(shelter=>{
+                if(shelter){
                     shelter.inDB = true;
                     res.locals.shelter = shelter;
                     next();
+                }else{
+                    // Check API is not in DB
+                    shelterController.getShelterFromAPI(shelterId)        
+                        .then(shelter => {
+                            if (!shelter) {
+                                res.redirect("/shelters");
+                            } else {
+                                res.locals.shelter = shelter;
+                                next();
+                            }
+                        })
+                        .catch(err => {
+                            console.log(`Error finding shelter: ${shelterId}`);
+                            console.log(err);
+                            res.render("shelters", {
+                                errors: ["Error finding shelter"]
+                            })
+                        })
                 }
-            })
-            .catch(err => {
-                console.log(`Error finding shelter: ${shelterId}`);
-                console.log(err);
-                res.render("shelters", {
-                    errors: ["Error finding shelter"]
-                })
             })
     }
 
     const getSheltersFromApi = function (req, res, next) {
-        const BASE_URL = "http://api.petfinder.com/";
         const zipcode = req.body.zip;
-
-        const URL = `${BASE_URL}shelter.find?key=${API_KEY}&format=json&location=${zipcode}`;
-        fetch(URL)
-            .then(res => res.json())
-            .then(json => {
-                if (validResponse(json)) {
-                    const data = json.petfinder.shelters.shelter;
-
-                    res.locals.shelters = data.map(shelter => {
-                        return {
-                            api_id: shelter.id.$t,
-                            name: shelter.name.$t,
-                            location: `${shelter.zip.$t} ${shelter.city.$t}, ${shelter.state.$t}`,
-                            contact: shelter.email.$t
-                        }
-                    });
-                    next();
-                } else {
-                    const message = json.petfinder.header.status.message.$t;
-                    console.log("Problem accessing API: ", message);
-                    res.render("shelters", {
-                        errors: [`Problem accessing shelters at zip: ${zipcode}`]
-                    })
-                }
+        shelterController.getSheltersFromAPI(zipcode)
+            .then(shelters=>{
+                res.locals.shelters = shelters;
+                next();
             })
-            .catch(err => {
+            .catch(err=>{
                 console.log("Problem accessing API: ", err);
                 res.render("shelters", {
                     errors: [`Problem accessing shelters at zip: ${zipcode}`]
@@ -100,5 +89,6 @@ module.exports = dbHandler => {
     }, getSheltersFromApi, (req, res) => {
         res.render("shelters");
     });
+
     return router;
 }

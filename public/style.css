@@ -4,3 +4,7 @@
 .shelter-table a:hover{
     color: red;
 }
+
+.shelter-row{
+    border-width: 2px!important;
+}

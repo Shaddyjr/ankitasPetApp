@@ -24,12 +24,16 @@
         <% if (shelter.formUrl){%>
             <a href="<%=shelter.formUrl%>" target="_blank" class="btn btn-outline-secondary waves-effect text-muted">Fill out original form</a>
         <% } %>
-        <% if (shelter.reviewed===1){%>
-            <a href="/shelters/<%= shelter.api_id %>/submit" class="btn btn-deep-purple text-muted">Submit Shelter Form!</a>
-        <% }else{ %>
+
+        <% if (!shelter.inDB){%>
             <a href="/shelters/<%= shelter.api_id %>/review" class="btn btn-outline-warning">Request Review for Shelter Form</a>
             <small class="form-text text-muted mb-4">Each shelter's adoption form can have unique nuances that require a human to make sense of things</small>
-
+        <% }else{ %>
+            <% if (shelter.reviewed===1){%>
+                <a href="/shelters/<%= shelter.api_id %>/submit" class="btn btn-deep-purple text-muted">Submit Shelter Form!</a>
+            <% }else{ %>
+                <p class="btn btn-deep-purple text-muted">This shelter is currently under review</p>
+        <% } %>
         <% } %>
     </div>
     </div>

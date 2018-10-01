@@ -11,10 +11,16 @@ module.exports = (app, dbHandler) => {
     app.use('/', indexRouter);
 
     // protected
+    app.use(authenticationHandler);
+
     const sheltersRouter = require('./shelters')(dbHandler);
-    app.use('/shelters', authenticationHandler, sheltersRouter);
+    app.use('/shelters', sheltersRouter);
 
     const userRouter = require('./user')(dbHandler);
-    app.use('/user', authenticationHandler, userRouter);
+    app.use('/user', userRouter);
+
+    // admin
+    const adminRouter = require('./admin')(dbHandler);
+    app.use('/admin', adminRouter);
 
 }

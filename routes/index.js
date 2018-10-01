@@ -50,6 +50,7 @@ module.exports = (dbHandler,authenticationHandler) => {
                 })
         });
     }
+    
     router.get('/', function (request, response) {
         response.render("index");
     });

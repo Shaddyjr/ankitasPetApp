@@ -15,6 +15,17 @@
             </ul>
             <ul class="navbar-nav ml-auto">
             <% if(isAuthenticated) { %>
+                <% if(user.admin===1) { %>
+                    <li class="nav-item">
+                        <a class="nav-link text-info" href="#">Flagged Shelters</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-info" href="#">Blacklist</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-info" href="#">Users</a>
+                    </li>
+                <%}%>
                 <li class="nav-item">
                     <a class="nav-link" href="/profile">Profile</a>
                 </li>
