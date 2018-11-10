@@ -1,0 +1,66 @@
+@font-face{
+    font-family: balans-1;
+    src: url(/static/assets/fonts/Balans-Line.ttf);
+}
+@font-face{
+    font-family: balans-2;
+    src: url(/static/assets/fonts/Balans-Normal.ttf);
+}
+:root{
+    --red: rgba(249, 98, 125, 1);
+    --green: rgba(158, 228, 147, 1);
+    --light: rgba(218, 247, 220, 1);
+    --lightGreen: rgba(171, 200, 192, 1);
+    --lightPurple: rgba(112, 86, 109, 1);
+    --purple: rgba(66, 39, 59, 1);
+}
+
+body{
+    background-color: var(--purple);
+    color: var(--light);
+}
+
+nav{
+    background-color: var(--red);
+}
+
+.navbar-dark .navbar-brand,
+.nav-link
+{
+    color: var(--light)!important;
+}
+
+footer{
+    background-color: var(--red);
+}
+
+footer.page-footer .footer-copyright{
+    color: var(--light);
+}
+footer .fa{
+    color: var(--light);
+}
+
+/* INDEX */
+#title{
+    font-family: balans-2;
+    color: var(--lightPurple);
+    position: relative;
+}
+#title::after{
+    content:attr(data-text);
+    display: block;
+    position: absolute;
+    top: 0;
+    /* left: -1px; */
+    font-family: balans-1;
+    color: var(--red);
+}
+/* INDEX END */
+
+/* SHELTERS */
+.grid-container{
+    display: grid;
+    grid-template: auto/repeat(3,1fr);
+}
+/* SHELTERS END */

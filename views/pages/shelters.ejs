@@ -1,62 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
+<%include ../partials/header%>
 
-<head>
-    <title>Shelters</title>
-    <%include ../partials/head%>
-</head>
+<!-- Search form -->
+<h3>Search shelters near you</h3>
+<form action="/shelters" method="POST" class="form-inline active-purple-3 active-purple-4">
+    <i class="fa fa-search" aria-hidden="true"></i>
+    <input class="form-control form-control-sm ml-3 w-75" type="text" placeholder="Enter 5-digit Zip Code" aria-label="Search" name="zip" pattern="[0-9]{5}">
+</form>
 
-<body>
-    <%include ../partials/nav%>
-
-
-    <div class="container flex-center mt-4">
-        <form class="text-center border border-light p-5" action="/shelters/zip" method="POST">
-            <p class="h2 mb-4">Find Shelters by Zip Code</p>
-            <% if(locals.errors){ %>
-                <% for(const error of errors){ %>
-                    <p class="alert alert-danger"><%= error %></p>
-                <% }%>
-              <% }%>
-            <!-- Large input -->
-            <div class="md-form form-lg text-center">
-                <input type="zip" name="zip" class="form-control form-control-lg" placeholder="Zip Code">
-                <button class="btn btn-info btn-block my-4" type="submit">Find Shelters</button>
-            </div>
-    </div>
-
-    </form>
-
-    <%if(locals.shelters){%>
-        <div class="container flex-center">
-        <table class="shelter-table table table-hover w-75 text-center">
-                <thead>
-                  <tr class="black white-text">
-                    <th scope="col">Shelter Name</th>
-                    <th scope="col">Location</th>
-                    <th scope="col">Contact</th>
-                    <th scope="col">Adoption Form</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    <%for(const shelter of shelters){%>
-                  <tr class="hoverable border border-secondary rounded shelter-row">
-                    <th scope="row"><a href="/shelters/<%=shelter.api_id%>"><%=shelter.name%></a></th>
-                    <td><%=shelter.location%></td>
-                    <td><a href="mailto:<%=shelter.contact%>"><%=shelter.contact%></a></td>
-                    <td>
-                        <% if (shelter.formUrl){%>
-                        <a href="<%=shelter.formUrl%>"><i class="fa fa-lg fa-link" aria-hidden="true"></i></a>                            
-                        <%}%>
-                    </td>
-                  </tr>
-                  <%}%>
-                </tbody>
-              </table>
-            </div>
+<%if(locals.msg){%>
+    <%if(msg.error){%>
+        <div class="container">
+            <p class="alert-danger">
+                <%=msg.error%>
+            </p>
+        </div>
     <%}%>
-
-    <%include ../partials/footer%>
-</body>
-
-</html>
+<%}else if(locals.shelters){%>
+    <div class="grid-container">
+        <%for(const shelter of shelters){%>
+            <a href="/shelters/<%=shelter.id.$t%>" class="grid-item">
+                <h2><%=shelter.name.$t%></h2>
+                <p><%=`${shelter.city.$t}, ${shelter.state.$t} ${shelter.zip.$t}`%></p>
+            </a>
+        <%}%>
+    </div>
+<%}%>
+<%include ../partials/footer%>

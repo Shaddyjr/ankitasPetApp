@@ -1,45 +1,45 @@
-<nav class="navbar navbar-expand-sm navbar-dark purple darken-1">
-        <a class="navbar-brand" href="/">PetApp (ALPHA)</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
-            aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
+<!--Navbar-->
+<nav class="navbar navbar-expand-md navbar-dark">
+
+        <!-- Navbar brand -->
+        <a class="navbar-brand" href="/">Ankita's Pet Shelter App</a>
+      
+        <!-- Collapse button -->
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#basicExampleNav"
+          aria-controls="basicExampleNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="/shelters">Find Shelter</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Browse Pets</a>
-                </li>
-            </ul>
-            <ul class="navbar-nav ml-auto">
-            <% if(isAuthenticated) { %>
-                <% if(user.admin===1) { %>
-                    <li class="nav-item">
-                        <a class="nav-link text-info" href="#">Flagged Shelters</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-info" href="#">Blacklist</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-info" href="#">Users</a>
-                    </li>
-                <%}%>
-                <li class="nav-item">
-                    <a class="nav-link" href="/profile">Profile</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/logout">Logout</a>
-                </li>
-            <% }else{ %>
-                <li class="nav-item">
-                    <a class="nav-link" href="/login">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/signup">Sign up</a>
-                </li>
-            <% }%>
-            </ul>     
-        </div>
-    </nav>
+      
+        <!-- Collapsible content -->
+        <div class="collapse navbar-collapse" id="basicExampleNav">
+      
+          <!-- Links -->
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/admin">Admin
+                <span class="sr-only">(current)</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/shelters">Shelters</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/metaForm">Meta Form</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/account">Account</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/logout">Logout</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/login">Log In / Sign Up</a>
+            </li>
+      
+          </ul>
+          <!-- Links -->
+              </div>
+        <!-- Collapsible content -->
+      
+      </nav>
+      <!--/.Navbar-->

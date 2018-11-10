@@ -3,92 +3,51 @@ const router = express.Router();
 const fetch = require("node-fetch");
 const API_KEY = process.env.API_KEY;
 
-// const validResponse = json => {
-//     return json.petfinder.header.status.code.$t === "100";
-// }
-
-const verifyZip = function (req) {
-    req.checkBody("zip", "Must provide a valid zip code").isInt({
-        min: 0,
-        max: 99999
-    });
-    req.checkBody("zip", "Must provide a valid zip code").isLength({
-        min: 5,
-        max: 5
-    });
+const parseApiData = json => {
+    if(json.petfinder.shelters){
+        return json.petfinder.shelters.shelter;
+    }else if(json.petfinder.shelter){
+        return json.petfinder.shelter;
+    }
 }
 
 module.exports = dbHandler => {
-    const shelterController = require("../controllers/shelterController");
-    shelterController.mountDb(dbHandler.db);
+    router.get('/',(req,res)=>{
+        res.render("shelters",{title: "Shelters"});
+    });
 
-    const getShelter = function (req, res, next) {
-        const shelterId = req.params.id;
-        // Check DB first
-        shelterController.getShelterFromDB(shelterId)
-            .then(shelter=>{
-                if(shelter){
-                    shelter.inDB = true;
-                    res.locals.shelter = shelter;
-                    next();
-                }else{
-                    // Check API is not in DB
-                    shelterController.getShelterFromAPI(shelterId)        
-                        .then(shelter => {
-                            if (!shelter) {
-                                res.redirect("/shelters");
-                            } else {
-                                res.locals.shelter = shelter;
-                                next();
-                            }
-                        })
-                        .catch(err => {
-                            console.log(`Error finding shelter: ${shelterId}`);
-                            console.log(err);
-                            res.render("shelters", {
-                                errors: ["Error finding shelter"]
-                            })
-                        })
-                }
-            })
-    }
-
-    const getSheltersFromApi = function (req, res, next) {
-        const zipcode = req.body.zip;
-        shelterController.getSheltersFromAPI(zipcode)
-            .then(shelters=>{
-                res.locals.shelters = shelters;
-                next();
+    router.post("/",(req,res)=>{
+        const zip = req.body.zip;
+        const url = `http://api.petfinder.com/shelter.find?key=${API_KEY}&format=json&location=${zip}`;
+        fetch(url)
+            .then(data=>data.json())
+            .then(json=>{
+                res.locals.shelters = parseApiData(json);
+                res.render("shelters",{title: "Shelters"});
             })
             .catch(err=>{
-                console.log("Problem accessing API: ", err);
-                res.render("shelters", {
-                    errors: [`Problem accessing shelters at zip: ${zipcode}`]
-                })
-            });
-    }
-
-    router.get("/", (req, res) => {
-        res.render("shelters");
-    })
-
-    router.get('/:id', getShelter, function (req, res) {
-        res.render("shelter");
-    });
-
-    router.post("/zip", (req, res, next) => {
-        verifyZip(req);
-        const errors = req.validationErrors();
-
-        if (errors) {
-            return res.render("shelters", {
-                errors: errors.map(error => error.msg)
+                req.session.msg = {
+                    error: "Error: Could not find shelters for zip code"
+                }
+                res.redirect("/shelters");
             })
-        }
-        next();
-    }, getSheltersFromApi, (req, res) => {
-        res.render("shelters");
     });
 
+    router.get('/:shelter_id',(req,res)=>{
+        const shelter_id = req.params.shelter_id;
+        const url = `http://api.petfinder.com/shelter.get?key=${API_KEY}&format=json&id=${shelter_id}`;
+        fetch(url)
+            .then(data=>data.json())
+            .then(json=>{
+                res.locals.shelter = parseApiData(json);
+                res.render("shelter",{title: `Shelter ${shelter_id}`});
+            })
+            .catch(err=>{
+                req.session.msg = {
+                    error: "Error: Could not find shelter"
+                }
+                res.redirect("/shelters");
+            })
+    });
     return router;
 }

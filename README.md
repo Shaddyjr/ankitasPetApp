@@ -1,11 +1,7 @@
 #To Do List
-- Automate meta form for users to fill in, based on all shelters
-- Add management of metaAnswers
-- include auto complete of form for user
-- Add Admin priveledges (assigning form questions to user metaAnswers, adding form URLs for shelters missing any or new shelters from users desire (add 'still under construction')) 
-- users with missing metaAnswer notifications
-- add front-end validation
-- abstract configs (and ignore for push)
-- refactor old code
-- track which shelters user has already applied for
-- Add blacklisted ShelterAPI_Ids and prevent them being seen during lookup
+- Set up API calls
+- Set up user creation and authentication
+- Set up users requestion shelter review
+- Set up Admin functionality to assess shelters and update accordingly
+- Set up user metaform completion (partial completion, too)
+- Complete user shelter form auto-fill

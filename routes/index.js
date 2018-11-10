@@ -4,9 +4,7 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const passport = require("passport");
 
-const clean = str => {
-    return str.trim().toLowerCase();
-}
+const clean = str => str.trim().toLowerCase();
 
 const validateSignup = req => {
     req.checkBody('username', 'Username field cannot be empty.').notEmpty();
@@ -19,125 +17,22 @@ const validateSignup = req => {
 }
 
 module.exports = (dbHandler,authenticationHandler) => {
-
-    /**
-     * Returns user if username exists, otherwise null.
-     */
-    const findUsername = username => {
-        return dbHandler.findById("usersByUsername", username);
-    }
-
-    const createUser = (username, email, password) => {
-        return new Promise((resolve, reject) => {
-            findUsername(username)
-                .then(user => {
-                    if (user) return reject(`User ${username} already exists.`);
-                    bcrypt.genSalt(saltRounds, function (err, salt) {
-                        if (err) return reject(err);
-                        bcrypt.hash(password, salt, function (err, hash) {
-                            if (err) return reject(err);
-                            dbHandler.insertData("users", username, salt, hash, email)
-                                .then(newUserID => {
-                                    dbHandler.findById("users", newUserID)
-                                    .then(newUser=>{
-                                        resolve(newUser)
-                                    })
-                                    .catch(err=>reject(err))
-                                })
-                                .catch(err => reject(err))
-                        });
-                    });
-                })
-        });
-    }
+    router.get('/',(req,res)=>{
+        res.render("index",{title: "Landing Page"});
+    });
     
-    router.get('/', function (request, response) {
-        response.render("index");
+    router.get('/login',(req,res)=>{
+        res.render("login",{title: "Log In"});
     });
-
-    router.get('/login', function (request, response) {
-        response.render("login");
+    
+    router.get('/signup',(req,res)=>{
+        res.render("login",{title: "Sign Up", signup: true});
     });
-
-    router.post('/login', function (req, res, next) {
-        passport.authenticate("local", (err, userObj, info) => {
-            if (err) return next(err);
-            
-            const user = userObj.user;
-            if (!user) {
-                req.checkBody("username", "Username is required").notEmpty();
-                req.checkBody("password", "Password is required").notEmpty();
-
-                const errors = req.validationErrors();
-                if (errors) {
-                    return res.render("login", {
-                        errors: errors.map(error => error.msg)
-                    });
-                } else {
-                    return res.render("login", {
-                        errors: ["Incorrect username or password"]
-                    });
-                }
-            } else {
-                // must log in user
-                req.logIn(user, function (err) {
-                    if (err) {
-                        return next(err);
-                    }
-                    res.redirect(`/user/${clean(user.username)}`);
-                });
-            }
-        })(req, res, next)
+    
+    // Authenticated after this point
+    router.get('/account',(req,res)=>{
+        res.render("account",{title: "Account"});
     });
-
-    router.get('/logout', function (req, res) {
-        req.logout();
-        req.session.destroy();
-        res.redirect("/");
-    });
-
-    router.get('/signup', function (request, response) {
-        response.render("signup");
-    });
-
-    router.post('/signup', function (req, res) {
-        validateSignup(req);
-
-        const errors = req.validationErrors();
-
-        if (errors) {
-            return res.render("signup", {
-                errors: errors.map(error => error.msg)
-            })
-        }
-
-        const username = clean(req.body.username);
-        const email = req.body.email;
-        const password = req.body.password;
-
-        createUser(username, email, password)
-            .then(user => {
-                req.login(user, function (err) {
-                    res.redirect("/");
-                })
-            })
-            .catch(err => {
-                console.log("Problem creating new user: ", username);
-                console.error(err);
-                res.render("signup", {
-                    errors: ["Problem creating new user"]
-                });
-            });
-    });
-
-    router.get("/profile", authenticationHandler, function(req,res){
-        const user = req.user;
-        if(user){
-            res.redirect(`/user/${user.username}`);
-        }else{
-            res.redirect('/');
-        }
-    })
 
     return router;
 };
