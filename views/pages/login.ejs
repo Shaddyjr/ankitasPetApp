@@ -1,25 +1,67 @@
 <%include ../partials/header%>
 
+<%if(locals.msg){%>
+    <%if(msg.errors){%>
+        <%for(error of msg.errors){%>
+            <p class="alert-warning"><%=error.msg%></p>
+        <%}%>
+    <%}%>
+<%}%>
 <!-- Default form login -->
-<form class="text-center border border-light p-5">
+<form id="login" action="/login" method="POST" class="text-center border border-light p-5 <%if(locals.msg && msg.view==='signup'){%> hidden <%}%>">
+    <p class="h4 mb-4">Log in</p>
+    <!-- Username -->
+    <input type="text" name="username" class="form-control mb-4" placeholder="username">
+    <!-- Password -->
+    <input type="password" name="password" class="form-control mb-4" placeholder="Password">
+    <!-- Sign in button -->
+    <button class="btn btn-info btn-block my-4" type="submit">Sign in</button>
+    <!-- Register -->
+    <p>Not a member?
+        <button id="loginSwap" type="button" class="btn btn-primary">Sign Up</button>
+    </p>
+</form>
+<!-- Default form login -->
 
-        <p class="h4 mb-4">Log in</p>
+<!-- Default form signup -->
+<form id="signup" action="/signup" method="POST" class="text-center border border-light p-5 <%if(locals.msg && msg.view==='login' || !locals.msg){%> hidden <%}%>">
+    <p class="h4 mb-4">Sign Up</p>
+    <!-- Username -->
+    <input type="text" name="username" class="form-control mb-4" placeholder="Username">
+    <p class="muted-text">Must be between 4 and 14 characters of letters and numbers</p>
+    <!-- Email -->
+    <input type="email" name="email" class="form-control mb-4" placeholder="E-mail">
+    <!-- Password -->
+    <input type="password" name="password" class="form-control mb-4" placeholder="Password">
+    <p class="muted-text">Must contain at least 1 capital, lowercase, number, and special character</p>
+    <input type="password" name="password2" class="form-control mb-4" placeholder="Confirm Password">
     
-        <!-- Email -->
-        <input type="email" class="form-control mb-4" placeholder="E-mail">
-    
-        <!-- Password -->
-        <input type="password" class="form-control mb-4" placeholder="Password">
-
-    
-        <!-- Sign in button -->
-        <button class="btn btn-info btn-block my-4" type="submit">Sign in</button>
-    
-        <!-- Register -->
-        <p>Not a member?
-            <a href="/signup">Sign Up</a>
-        </p>
-    </form>
-    <!-- Default form login -->
-
+    <!-- Sign in button -->
+    <button class="btn btn-info btn-block my-4" type="submit">Sign up</button>
+    <!-- Register -->
+    <p>Already a member?
+        <button id="signupSwap" type="button" class="btn btn-primary">Log In</button>
+    </p>
+</form>
+<!-- Default form signup -->
+<script>
+    document.addEventListener("DOMContentLoaded", function(event) {
+        const swap = function*(){
+            let counter = 0;
+            while(true){
+                if(counter++%2===0){
+                    login.style.display = "none";
+                    signup.style.display = "block";
+                }else{
+                    signup.style.display = "none";
+                    login.style.display = "block";
+                }
+                yield;
+            }
+        }
+        const swapper = swap();
+        loginSwap.addEventListener("click",()=>swapper.next());
+        signupSwap.addEventListener("click",()=>swapper.next());
+    });
+</script>
 <%include ../partials/footer%>

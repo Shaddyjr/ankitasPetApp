@@ -19,4 +19,36 @@ module.exports = new class DbHandler {
         this.db.run("CREATE TABLE `userMetaAnswers` ( `user_id` INTEGER NOT NULL, `meta_answer_id` INTEGER, `value` BLOB)"); 
     }
     
+    findUserByUsername(username){
+        return new Promise((res, rej)=>{
+            const sql = "SELECT * FROM users WHERE username=?;";
+            this.db.get(sql,username,(err,row)=>{
+                if(err) return rej(err);
+                res(row);
+            })
+        })
+    }
+
+    findUserById(id){
+        return new Promise((res, rej)=>{
+            const sql = "SELECT * FROM users WHERE id=?;";
+            this.db.get(sql,id,(err,row)=>{
+                if(err) return rej(err);
+                res(row);
+            })
+        })
+    }
+
+    insertNewUser({username,email, password}){
+        const self = this;
+        return new Promise((res, rej)=>{
+            const sql = "INSERT INTO users (username, email, password) VALUES (?,?,?)";
+            this.db.run(sql, [username,email, password], function(err){
+                if(err) rej(err);
+                self.findUserById(this.lastID)
+                    .then(user=>res(user))
+                    .catch(err=>rej(err))
+            });
+        });
+    }
 }

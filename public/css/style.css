@@ -15,6 +15,10 @@
     --purple: rgba(66, 39, 59, 1);
 }
 
+.hidden{
+    display: none;
+}
+
 body{
     background-color: var(--purple);
     color: var(--light);

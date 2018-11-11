@@ -1,8 +1,7 @@
 require('dotenv').load(); // required for using .env file
 var express = require('express');
 var path = require('path');
-var bodyParser = require('body-parser');
-var validator = require("express-validator"); // NEED TO IMPLEMENT NEW API
+// var validator = require("express-validator"); // NEED TO IMPLEMENT NEW API
 var session = require("express-session");
 var methodOverride = require('method-override');
 // Authentication packages
@@ -13,17 +12,13 @@ const bcrypt = require("bcrypt");
 const dbHandler = require("./dbHandler");
 
 var app = express();
-app.use("/static",express.static(path.join(__dirname, 'public')));
 
-// View Engine
 app.set('view engine', 'ejs');
 app.set("views","./views/pages");
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
-// must come immediately after bodyParser (adds "checkBody" method to request object)
-app.use(validator());
-
+// View Engine
+app.use("/static",express.static(path.join(__dirname, 'public')));
+app.use(express.json()); // does body parsing
+app.use(express.urlencoded({ extended: true }));
 // setting & storing session
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -36,11 +31,10 @@ app.use(session({
 app.use(passport.initialize()); // adds .login, .serializeUser, and .deserializeUser, .user, .isAuthenticated()
 app.use(passport.session());
 
-const clean = str => {
-  return str.trim().toLowerCase();
-}
+const clean = str => str.trim().toLowerCase();
+
 async function verifyUser(username, password) {
-  const user = await dbHandler.findById("usersByUsername", clean(username));
+  const user = await dbHandler.findUserByUsername(clean(username));
   if (!user) return false;
   return await new Promise((res, rej) => {
       bcrypt.compare(password, user.password, function (err, result) {
@@ -65,22 +59,21 @@ app.use(methodOverride(function (req, res) {
   }
 }))
 
-// ROUTES
-require("./routes/routesHandler")(app, dbHandler);
-
-// LOCAL STRATEGY
-passport.use(new LocalStrategy(
+// LOCAL Authentication STRATEGY
+passport.use(new LocalStrategy({
+  usernameField: 'username',
+  passwordField: 'password'},
   function (username, password, done) {
-      verifyUser(username, password).
-        then(user => {
-                if (user) return done(null, {
-                    "user":user
-                });
-                done(null, false);
-            })
-            .catch(err => {
-                done(err);
-            })
+    verifyUser(username, password).
+      then(user => {
+        if (user){
+          return done(null, user);
+        };
+        done(null, false);
+      })
+      .catch(err => {
+        done(err);
+      })
   }
 ));
 
@@ -88,8 +81,8 @@ passport.serializeUser(function (user, done) {
   done(null, user.id);
 });
 
-passport.deserializeUser(function (userID, done) {
-  dbHandler.findById("users",userID)
+passport.deserializeUser(function (user_id, done) {
+  dbHandler.findUserById(user_id)
     .then(user=>{
       done(null, user);
     })
@@ -97,6 +90,10 @@ passport.deserializeUser(function (userID, done) {
       done(err);
     })
 });
+
+// ROUTES
+app.use(require("./routes/routesHandler")(dbHandler));
+
 // Catching last route as 404 - unsuccessful
 app.use((req, res, next)=>{
   res.status = 404;

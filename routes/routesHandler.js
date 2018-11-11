@@ -1,3 +1,6 @@
+const express = require('express');
+const router = express.Router();
+
 const authenticationHandler = (req, res, next) => {
     if (req.isAuthenticated()){
         return next();
@@ -15,20 +18,25 @@ const errorHandler = (req,res,next) => {
     }
     next();
 }
-module.exports = (app, dbHandler) => {
+module.exports = (dbHandler) => {
     // Injecting data
-    app.use(errorHandler);
+    router.use(errorHandler);
 
     const indexRouter = require('./index')(dbHandler,authenticationHandler);
-    app.use('/', indexRouter);
+    router.use('/', indexRouter);
 
     const sheltersRouter = require('./shelters')(dbHandler);
-    app.use('/shelters', sheltersRouter);
+    router.use('/shelters', sheltersRouter);
+
+    // Authenticated after this point
+    router.use(authenticationHandler);
 
     const metaFormRouter = require('./metaForm')(dbHandler);
-    app.use('/metaForm', metaFormRouter);
+    router.use('/metaForm', metaFormRouter);
 
     // admin
     const adminRouter = require('./admin')(dbHandler);
-    app.use('/admin', adminRouter);
+    router.use('/admin', adminRouter);
+
+    return router;
 }
