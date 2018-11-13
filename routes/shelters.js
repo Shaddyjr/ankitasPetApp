@@ -39,8 +39,29 @@ module.exports = dbHandler => {
         fetch(url)
             .then(data=>data.json())
             .then(json=>{
-                res.locals.shelter = parseApiData(json);
-                res.render("shelter",{title: `Shelter ${shelter_id}`});
+                if(!json.petfinder.shelter && !json.petfinder.shelters){
+                    req.session.msg = {
+                        error: "Error: Could not find shelter"
+                    }
+                    return res.redirect("/shelters");
+                }
+                dbHandler.getShelterByApiId(shelter_id)
+                    .then(shelter=>{
+                        if(shelter){
+                            res.locals.shelterInfo = {
+                                reviewed: shelter.reviewed===1,
+                                blacklisted: shelter.blacklist===1
+                            }
+                        }
+                        res.locals.shelter = parseApiData(json);
+                        res.render("shelter",{title: `Shelter ${shelter_id}`});
+                    })
+                    .catch(err=>{
+                        req.session.msg = {
+                            error: "Error: Could not find shelter"
+                        }
+                        res.redirect("/shelters");
+                    })
             })
             .catch(err=>{
                 req.session.msg = {
@@ -49,5 +70,37 @@ module.exports = dbHandler => {
                 res.redirect("/shelters");
             })
     });
+
+    router.post("/:shelter_id",(req,res)=>{
+        // POTENTIAL PROBLEM TRUSTING SHELTER_ID PARAM TO CREATE SHELTER IN DB
+        console.log(req.body);
+        const shelter_id = req.params.shelter_id;
+        const user_id = req.user.id;
+        dbHandler.requestShelterReview(shelter_id,user_id)
+            .then(()=>{
+                res.status(200).send();
+            })
+            .catch(err=>{
+                console.log(`Error requesting shelter review: ${shelter_id} User: ${user_id} Error:${err}`);
+                res.status(400).send("Error: Could request review for shelter");
+            })
+    });
+
+    router.put("/:shelter_id",(req,res)=>{
+        const shelter_id = req.params.shelter_id;
+        const sqlParams = {};
+        if(req.query.reviewed) sqlParams.reviewed = req.query.reviewed;
+        if(req.query.blacklist) sqlParams.blacklist = req.query.blacklist;
+        dbHandler.updateShelter(shelter_id,sqlParams)
+            .then(result=>{
+                if(result){
+                    res.status(200).send();
+                }else{
+                    console.log("Error updating shelter (Admin)");
+                    res.status(400).send();
+                }
+            })
+    })
+
     return router;
 }

@@ -51,4 +51,52 @@ module.exports = new class DbHandler {
             });
         });
     }
+
+    requestShelterReview(api_id, user_id){
+        return new Promise((res,rej)=>{
+            const sql="INSERT INTO shelters (api_id, user_id) VALUES (?,?);";
+            this.db.run(sql,[api_id,user_id],(err)=>{
+                if(err) return rej(err);
+                res();
+            })
+        })
+    }
+
+    getShelterByApiId(api_id){
+        return new Promise((res,rej)=>{
+            const sql="SELECT * FROM shelters WHERE api_id=?";
+            this.db.get(sql,api_id,(err,row)=>{
+                if(err) return rej(err);
+                res(row);
+            })
+        })
+    }
+
+    getShelters(){
+        return new Promise((res,rej)=>{
+            const sql="SELECT * FROM shelters";
+            this.db.all(sql,(err,rows)=>{
+                if(err) return rej(err);
+                res(rows);
+            })
+        })
+    }
+
+    updateShelter(shelter_id,sqlParams){
+        let sql="UPDATE shelters SET";
+        const _sqlParams = [];
+        const keys = Object.keys(sqlParams);
+        for(const key of keys){
+            sql += ` ${key}=?`;
+            _sqlParams.push(sqlParams[key]);
+        }
+        sql += " WHERE api_id=?";
+        _sqlParams.push(shelter_id);
+        return new Promise((res,rej)=>{
+            this.db.run(sql,_sqlParams,function(err){
+                if(err) return rej(err);
+                res(this.changes>0);
+            })
+        })
+    }
 }

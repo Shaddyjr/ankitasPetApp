@@ -1,5 +1,36 @@
 <%include ../partials/header%>
 
-ADMIN INDEX
+<link rel="stylesheet" href="/static/css/admin.css">
+<script src="/static/js/admin.js" defer></script>
+<div class="main-container d-flex">
+    <%include ../partials/admin_sidebar%>
 
+    <div class="content-container d-flex">
+        <h2>Shelters</h2>
+        <%if(locals.shelters){%>
+        <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Reviewed?</th>
+                    <th scope="col">Blacklisted</th>
+                    <th scope="col">Requesting User ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    <%for(const shelter of shelters){%>
+                        <tr>
+                            <th scope="row"><a href="/shelters/<%=shelter.api_id%>" target="_blank"><%=shelter.api_id%></a></th>
+                            <td class="reviewed" data-url="/shelters/<%=shelter.api_id%>"><%=!!shelter.reviewed%></td>
+                            <td class="blacklist" data-url="/shelters/<%=shelter.api_id%>"><%=!!shelter.blacklist%></td>
+                            <td><%=shelter.user_id%></td>
+                        </tr>
+                    <%}%>
+                </tbody>
+              </table>
+            <%}else{%>
+                <h3 class="muted-text">{NO SHELTERS FOUND}</h3>
+            <%}%>
+    </div>
+</div>
 <%include ../partials/footer%>

@@ -1,0 +1,55 @@
+:root{
+    --adminDark: #212227;
+    --adminLight: #BDD4E7;
+    --adminMid: #637074;
+    --adminRed: #985F6F;
+    --adminBlue: #A6B1E1;
+}
+
+.main-container{
+    height: 100vh;
+    background-color: var(--adminDark);
+}
+
+.sidebar{
+    flex-direction: column;
+    justify-content: space-evenly;
+    width: 25%;
+    align-items: center;
+    border-right: solid 2px var(--adminLight);
+}
+
+.sidebar a,
+table.table a
+{
+    color: var(--adminBlue);
+    border-bottom: solid 1px var(--adminBlue);
+}
+
+.sidebar a{
+    font-size: 30px;
+}
+
+.sidebar a:hover,
+table.table a:hover
+{
+    color: var(--adminLight);
+    border-bottom: solid 1px var(--adminLight);
+}
+
+.content-container{
+    flex-direction: column;
+    overflow-y:scroll;
+    flex: 1;
+}
+
+.reviewed,
+.blacklist{
+    cursor: pointer;
+    color: var(--adminBlue);
+}
+
+.reviewed:hover,
+.blacklist:hover{
+    color: var(--adminRed);
+}

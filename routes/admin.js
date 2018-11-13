@@ -7,7 +7,11 @@ const verifyAdmin = user =>{
 
 module.exports = dbHandler => {
     router.get('/',(req,res)=>{
-        res.render("admin_index",{title: "Admin"});
+        dbHandler.getShelters()
+            .then(shelters=>{
+                res.locals.shelters = shelters;
+                res.render("admin_index",{title: "Admin"});
+            })
     });
     return router;
 }

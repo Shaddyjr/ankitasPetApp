@@ -20,7 +20,7 @@ const validateSignup = req => {
 
 const errorCreatingUser = (req,res) =>{
     req.session.msg={
-        errors: ["Could not create new user"],
+        errors: [{msg:"Could not create new user"}],
         view: "signup"
     }
     return res.redirect("/login");
@@ -57,9 +57,28 @@ module.exports = (dbHandler,authenticationHandler) => {
         res.render("login",{title: "Log In"});
     });
 
-    router.post('/login',passport.authenticate("local"),(req,res)=>{
-        res.redirect("/");
-    });
+    router.post('/login', function(req, res, next) {
+        passport.authenticate('local', function(err, user, info) {
+            if (err) { 
+                console.log(`Error authenticating: ${err}`);
+                return next(err);
+            }
+            if (!user) {
+                req.session.msg={
+                    errors: [{msg:"Incorrect username or password"}],
+                    view: "login"
+                }
+                return res.redirect('/login'); 
+            }
+            req.logIn(user, function(err) {
+                if (err) { 
+                    console.log(`Error logging user in - User: ${user} Error: ${err}`);
+                    return next(err);
+                }
+                return res.redirect('/users/' + user.username);
+            });
+        })(req, res, next);
+      });
 
     router.post('/signup', [
         check("username").not().isEmpty().trim().escape().withMessage("Username must be provided"),
