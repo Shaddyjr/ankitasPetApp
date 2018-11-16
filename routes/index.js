@@ -75,7 +75,7 @@ module.exports = (dbHandler,authenticationHandler) => {
                     console.log(`Error logging user in - User: ${user} Error: ${err}`);
                     return next(err);
                 }
-                return res.redirect('/users/' + user.username);
+                return res.redirect('/');
             });
         })(req, res, next);
       });

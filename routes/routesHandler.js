@@ -40,7 +40,7 @@ module.exports = (dbHandler) => {
     const indexRouter = require('./index')(dbHandler,authenticationHandler);
     router.use('/', indexRouter);
 
-    const sheltersRouter = require('./shelters')(dbHandler);
+    const sheltersRouter = require('./shelters')(dbHandler, admingAuthentication);
     router.use('/shelters', sheltersRouter);
 
     // Authenticated after this point

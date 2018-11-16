@@ -1,4 +1,4 @@
-var fetch = require("node-fetch");
+const fetch = require("node-fetch");
 const { JSDOM } = require("jsdom");
 const KEY_ITERATION_SEPERATOR = "-!-";
 const key_iteration_re = new RegExp(KEY_ITERATION_SEPERATOR);
@@ -8,8 +8,8 @@ module.exports = class ShelterFormatter{
         this.shelterApiId = shelterApiId;
     }
     
-    getCleanPage(){
-        return new Promise((res,rej)=>{
+    async getCleanPage(){
+        const html = await new Promise((res,rej)=>{
             fetch(this.URL)
                 .then(response=>response.text())
                 .then(html=>{
@@ -19,7 +19,8 @@ module.exports = class ShelterFormatter{
                     console.log("done cleaning DOM - going to serialize");
                     res(cleanDom.serialize());
                 })
-        })
+        });
+        return html;
     }
 
     /**

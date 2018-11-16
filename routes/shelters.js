@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fetch = require("node-fetch");
 const API_KEY = process.env.API_KEY;
+const ShelterFormHandler = require("./helpers/shelterFormHandler");
 
 const parseApiData = json => {
     if(json.petfinder.shelters){
@@ -11,7 +12,7 @@ const parseApiData = json => {
     }
 }
 
-module.exports = dbHandler => {
+module.exports = (dbHandler,admingAuthentication) => {
     router.get('/',(req,res)=>{
         res.render("shelters",{title: "Shelters"});
     });
@@ -50,7 +51,9 @@ module.exports = dbHandler => {
                         if(shelter){
                             res.locals.shelterInfo = {
                                 reviewed: shelter.reviewed===1,
-                                blacklisted: shelter.blacklist===1
+                                blacklisted: shelter.blacklist===1,
+                                formUrl: shelter.formUrl,
+                                actionUrl: shelter.actionUrl
                             }
                         }
                         res.locals.shelter = parseApiData(json);
@@ -73,7 +76,6 @@ module.exports = dbHandler => {
 
     router.post("/:shelter_id",(req,res)=>{
         // POTENTIAL PROBLEM TRUSTING SHELTER_ID PARAM TO CREATE SHELTER IN DB
-        console.log(req.body);
         const shelter_id = req.params.shelter_id;
         const user_id = req.user.id;
         dbHandler.requestShelterReview(shelter_id,user_id)
@@ -86,11 +88,13 @@ module.exports = dbHandler => {
             })
     });
 
-    router.put("/:shelter_id",(req,res)=>{
+    router.put("/:shelter_id",admingAuthentication,(req,res)=>{
         const shelter_id = req.params.shelter_id;
         const sqlParams = {};
         if(req.query.reviewed) sqlParams.reviewed = req.query.reviewed;
         if(req.query.blacklist) sqlParams.blacklist = req.query.blacklist;
+        if(req.query.formUrl) sqlParams.formUrl = req.query.formUrl;
+        if(req.query.actionUrl) sqlParams.actionUrl = req.query.actionUrl;
         dbHandler.updateShelter(shelter_id,sqlParams)
             .then(result=>{
                 if(result){
@@ -100,7 +104,54 @@ module.exports = dbHandler => {
                     res.status(400).send();
                 }
             })
-    })
+    });
+
+    const addShelterFormInputs = async function(shelter_id, formData){
+        const shelterExists = await dbHandler.shelterFormInputsExists(shelter_id);
+        if(shelterExists) return;
+        const keys = Object.keys(formData);
+        for(const key of keys){
+            const arr = formData[key];
+            switch(key){
+                case "input":
+                    let counter = 1;
+                    for(const input of arr){
+                        if(input.name.length===0) input.name = `{Empty ${counter++}}`;
+                        await dbHandler.insertShelterFormInput(shelter_id, key, input.type, input.name);
+                    }
+                    break;
+                default:
+                    throw new Error;
+            }
+        }
+    }
+
+    router.get("/:shelter_id/formUrl",admingAuthentication,(req,res)=>{
+        const shelter_id = req.params.shelter_id;
+        dbHandler.getShelterByApiId(shelter_id)
+            .then(shelter=>{
+                if(shelter){
+                    if(!shelter.formUrl) return res.send("Shelter does not have formUrl");
+                    const shelterFormHandler = new ShelterFormHandler(shelter.formUrl, shelter_id);
+                    shelterFormHandler.getCleanPage()
+                        .then(data=>{
+                            const {html, formData} = data;
+                            addShelterFormInputs(shelter_id, formData).then(()=>{
+                                res.send(html);
+                            })
+                        })
+                        .catch(err=>{
+                            res.send(err);
+                        })
+                }else{
+                    res.send("Could not find shelter");
+                }
+            })
+            .catch(err=>{
+                console.log("Err: ", err);
+                res.send(err);
+            })        
+    });
 
     return router;
 }

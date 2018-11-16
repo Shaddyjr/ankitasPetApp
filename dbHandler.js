@@ -12,11 +12,11 @@ module.exports = new class DbHandler {
     }
 
     createTables() {
-        this.db.run("CREATE TABLE 'users' ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL UNIQUE, `password` TEXT NOT NULL, `email` TEXT, `admin` INTEGER DEFAULT 0 )");
-        this.db.run("CREATE TABLE `shelters` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `api_id` TEXT UNIQUE, `reviewed` INTEGER DEFAULT 0, `blacklist` INTEGER DEFAULT 0, `user_id` INTEGER)");
-        this.db.run("CREATE TABLE `shelterFormInputs` ( `shelter_id` INTEGER NOT NULL, `form_input_name` TEXT NOT NULL, `meta_answer_id` INTEGER);");
-        this.db.run("CREATE TABLE `metaAnswers` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `common_name` TEXT NOT NULL, `input_type` TEXT DEFAULT 'text', `description` TEXT )");
-        this.db.run("CREATE TABLE `userMetaAnswers` ( `user_id` INTEGER NOT NULL, `meta_answer_id` INTEGER, `value` BLOB)"); 
+        this.db.run("CREATE TABLE 'users' ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL UNIQUE, `password` TEXT NOT NULL, `email` TEXT, `admin` INTEGER DEFAULT 0);");
+        this.db.run("CREATE TABLE `shelters` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `api_id` TEXT UNIQUE, `reviewed` INTEGER DEFAULT 0, `blacklist` INTEGER DEFAULT 0, `user_id` INTEGER, `formUrl` TEXT, `actionUrl` TEXT);");
+        this.db.run("CREATE TABLE `shelterFormInputs` ( `shelter_id` INTEGER NOT NULL, `name` TEXT, `type` TEXT, `element` TEXT, `meta_answer_id` INTEGER);");
+        this.db.run("CREATE TABLE `metaAnswers` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, `common_name` TEXT NOT NULL, `description` TEXT);");
+        this.db.run("CREATE TABLE `userMetaAnswers` ( `user_id` INTEGER NOT NULL, `meta_answer_id` INTEGER, `value` BLOB);"); 
     }
     
     findUserByUsername(username){
@@ -98,5 +98,25 @@ module.exports = new class DbHandler {
                 res(this.changes>0);
             })
         })
+    }
+
+    insertShelterFormInput(shelter_id, element, type, name){
+        return new Promise((res,rej)=>{
+            const sql = 'INSERT INTO shelterFormInputs (shelter_id, element, type, name) VALUES (?,?,?,?);';
+            this.db.run(sql, [shelter_id, element, type, name], function(err){
+                if(err) return rej(err);
+                res();
+            })
+        });
+    }
+
+    shelterFormInputsExists(shelter_id){
+        return new Promise((res,rej)=>{
+            const sql = 'SELECT * FROM shelterFormInputs WHERE shelter_id=?';
+            this.db.get(sql, shelter_id, function(err,row){
+                if(err) return rej(err);
+                res(row);
+            })
+        }); 
     }
 }

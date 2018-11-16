@@ -14,53 +14,83 @@
         <p><%=shelter.email.$t%></p>
         <p><%=shelter.phone.$t%></p>
         <div class="container">
-            <div class="progress md-progress" style="height: 20px">
-                <div class="progress-bar" role="progressbar" style="width: 25%; height: 20px" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">55% of form complete</div>
-            </div>
-
-            <%if(locals.shelterInfo){%>
-                <%if(shelterInfo.blacklisted){%>
-                <div class="alert alert-danger" role="alert">
-                    This shelter has been blacklisted
-                </div>
-                <%}else{%>
-                    <%if(!shelterInfo.reviewed){%>
-                        <div class="alert alert-warning" role="alert">
-                            This shelter is under review. Please try again later.
-                        </div>
+            <%if(locals.user){%>
+                <div class="progress md-progress" style="height: 20px">
+                        <div class="progress-bar" role="progressbar" style="width: 25%; height: 20px" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">55% of form complete</div>
+                    </div>
+                <%if(locals.shelterInfo){%>
+                    <%if(shelterInfo.blacklisted){%>
+                    <div class="alert alert-danger" role="alert">
+                        This shelter has been blacklisted
+                    </div>
                     <%}else{%>
-                        <div class="btn-group mr-2" role="group">
-                            <button type="button" class="btn btn-default">Go to Meta Form</button>
-                            <button type="button" class="btn btn-default">Manual input</button>
-                        </div>            
+                        <%if(!shelterInfo.reviewed){%>
+                            <div class="alert alert-warning" role="alert">
+                                This shelter is under review. Please try again later.
+                            </div>
+                        <%}else{%>
+                            <div class="btn-group mr-2" role="group">
+                                <button type="button" class="btn btn-default">Go to Meta Form</button>
+                                <button type="button" class="btn btn-default">Manual input</button>
+                            </div>            
+                        <%}%>
                     <%}%>
-                <%}%>
-            <%}else{%>
-                <div class="btn-group mr-2" role="group">
-                    <button id="reqShelter" type="button" class="btn btn-default">Request Shelter to be reviewed</button>
-                </div>
-                <script>
-                    document.addEventListener("DOMContentLoaded",e=>{
-                        const clickFunction = e =>{
-                            reqShelter.style.display = "none";
-                            const url = window.location.href;
-                            fetch(url,{
-                                method: "POST"
-                            })
-                                .then(()=>{
-                                    reqShelter.removeEventListener("click", clickFunction);
-                                    reqShelter.style.display = "block";
-                                    reqShelter.classList = "";
-                                    reqShelter.textContent = "Request accepted! An admin will review this shelter for compliance with this app.";
+                <%}else{%>
+                    <div class="btn-group mr-2" role="group">
+                        <button id="reqShelter" type="button" class="btn btn-default">Request Shelter to be reviewed</button>
+                    </div>
+                    <script>
+                        document.addEventListener("DOMContentLoaded",e=>{
+                            const clickFunction = e =>{
+                                reqShelter.style.display = "none";
+                                const url = window.location.href;
+                                fetch(url,{
+                                    method: "POST"
                                 })
+                                    .then(()=>{
+                                        reqShelter.removeEventListener("click", clickFunction);
+                                        reqShelter.style.display = "block";
+                                        reqShelter.classList = "";
+                                        reqShelter.textContent = "Request accepted! An admin will review this shelter for compliance with this app.";
+                                    })
+                            }
+                            reqShelter.addEventListener("click",clickFunction);
+                        })
+                    </script>
+                <%}%>
+    
+                <%if(!!user.admin && locals.shelterInfo){%>
+                    <p>Edit Shelter formUrl</p>
+                    <input id="formUrl" type="text" placeholder="<%=shelterInfo.formUrl%>">
+                    <p>Edit Shelter actionUrl</p>
+                    <input id="actionUrl" type="text" placeholder="<%=shelterInfo.actionUrl%>">
+                    <br>
+                    <a href="/shelters/<%=shelter.id.$t%>/formUrl" target="_blank">See Injected Form</a>
+                    <script>
+                        const items = [formUrl, actionUrl];
+                        for(const item of items){
+                            item.addEventListener("keyup", e=> {
+                                if (event.keyCode === 13) {
+                                    const target = $(e.target);                            
+                                    const value = target.val();
+                                    fetch(`${document.location.href}?_method=PUT&${item.id}=${value}`,{
+                                        method:"POST"
+                                    }).then(res=>{
+                                        if(res.status===200){
+                                            item.placeholder = target.val();
+                                            target.val("");
+                                        }else{
+                                            target.val("💀Error💀");
+                                        }
+                                    })
+                                }
+                            });
                         }
-                        reqShelter.addEventListener("click",clickFunction);
-                    })
-                </script>
-            <%}%>
-
-
-            
+                    </script>
+                <%}%> 
+            <%}else{%>
+                <a href="/login">Sign up for Ankita's Pet App today!</a>
+            <%}%>           
         </div>
     </div>
 </div>
