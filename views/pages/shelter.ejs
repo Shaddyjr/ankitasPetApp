@@ -64,8 +64,6 @@
                     <input id="formUrl" type="text" placeholder="<%=shelterInfo.formUrl%>">
                     <p>Edit Shelter actionUrl</p>
                     <input id="actionUrl" type="text" placeholder="<%=shelterInfo.actionUrl%>">
-                    <br>
-                    <a href="/shelters/<%=shelter.id.$t%>/formUrl" target="_blank">See Injected Form</a>
                     <script>
                         const items = [formUrl, actionUrl];
                         for(const item of items){
@@ -87,6 +85,35 @@
                             });
                         }
                     </script>
+                    <br>
+                    <a href="/shelters/<%=shelter.id.$t%>/formUrl">See Injected Form</a>
+                    <%if(locals.shelterInfo.formInputs){%>
+                        <table class="table table-hover">
+                            <thead>
+                              <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Form Name</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Element</th>
+                                <th scope="col">MetaAnswer</th>
+                                <th scope="col">Description</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                                <%for(let i = 0; i<shelterInfo.formInputs.length; i++){%>
+                                    <%const input = shelterInfo.formInputs[i]%>
+                                    <tr>
+                                      <th scope="row"><%=i+1%></th>
+                                      <th><%=JSON.stringify(input.name)%></th>
+                                      <td><%=JSON.stringify(input.type)%></td>
+                                      <td><%=JSON.stringify(input.element)%></td>
+                                      <td>MetaAnswer</td>
+                                      <td>Description</td>
+                                    </tr>
+                                <%}%>
+                            </tbody>
+                          </table>
+                    <%}%>
                 <%}%> 
             <%}else{%>
                 <a href="/login">Sign up for Ankita's Pet App today!</a>

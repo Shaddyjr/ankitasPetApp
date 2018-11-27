@@ -12,7 +12,7 @@ const parseApiData = json => {
     }
 }
 
-module.exports = (dbHandler,admingAuthentication) => {
+module.exports = (dbHandler,adminAuthentication) => {
     router.get('/',(req,res)=>{
         res.render("shelters",{title: "Shelters"});
     });
@@ -47,14 +47,17 @@ module.exports = (dbHandler,admingAuthentication) => {
                     return res.redirect("/shelters");
                 }
                 dbHandler.getShelterByApiId(shelter_id)
-                    .then(shelter=>{
-                        if(shelter){
+                    .then(info=>{
+                        if(info){
+                            const {shelter, formInputs } = info;
                             res.locals.shelterInfo = {
-                                reviewed: shelter.reviewed===1,
+                                reviewed:    shelter.reviewed===1,
                                 blacklisted: shelter.blacklist===1,
-                                formUrl: shelter.formUrl,
-                                actionUrl: shelter.actionUrl
+                                formUrl:     shelter.formUrl,
+                                actionUrl:   shelter.actionUrl,
+                                formInputs:  formInputs
                             }
+                            // RETRIEVE EXISTING METAANSWERS FOR DROPDOWN W/DESCRIPTIONS, ALLOWING FOR VALUES TO BE ID
                         }
                         res.locals.shelter = parseApiData(json);
                         res.render("shelter",{title: `Shelter ${shelter_id}`});
@@ -88,7 +91,7 @@ module.exports = (dbHandler,admingAuthentication) => {
             })
     });
 
-    router.put("/:shelter_id",admingAuthentication,(req,res)=>{
+    router.put("/:shelter_id",adminAuthentication,(req,res)=>{
         const shelter_id = req.params.shelter_id;
         const sqlParams = {};
         if(req.query.reviewed) sqlParams.reviewed = req.query.reviewed;
@@ -106,18 +109,32 @@ module.exports = (dbHandler,admingAuthentication) => {
             })
     });
 
+    // Adds the shelter's form inputs to DB (if not already in DB)
+    // UPDATE TO ADD REGARDLESS IF ALREADY EXISTS
     const addShelterFormInputs = async function(shelter_id, formData){
-        const shelterExists = await dbHandler.shelterFormInputsExists(shelter_id);
+        const shelterExists = await dbHandler.shelterFormInputsExists(shelter_id); // SHOULD CHECK IF NOT ALREADY UP FOR REVIEW OR ALREADY REVIEWED
         if(shelterExists) return;
         const keys = Object.keys(formData);
         for(const key of keys){
             const arr = formData[key];
+            let counter = 1;
             switch(key){
                 case "input":
-                    let counter = 1;
                     for(const input of arr){
                         if(input.name.length===0) input.name = `{Empty ${counter++}}`;
                         await dbHandler.insertShelterFormInput(shelter_id, key, input.type, input.name);
+                    }
+                    break;
+                case "select":
+                    for(const select of arr){
+                        if(select.name.length===0) select.name = `{Empty ${counter++}}`;
+                        await dbHandler.insertShelterFormInput(shelter_id, key, key, select.name, JSON.stringify(select.options));
+                    }
+                    break;
+                case "textarea":
+                    for(let textarea of arr){
+                        if(textarea.length===0) textarea = `{Empty ${counter++}}`;
+                        await dbHandler.insertShelterFormInput(shelter_id, key, key, textarea);
                     }
                     break;
                 default:
@@ -126,7 +143,8 @@ module.exports = (dbHandler,admingAuthentication) => {
         }
     }
 
-    router.get("/:shelter_id/formUrl",admingAuthentication,(req,res)=>{
+    // ADMIN ROUTE - views original form, but with injection to reroute to domain's route
+    router.get("/:shelter_id/formUrl",adminAuthentication,(req,res)=>{
         const shelter_id = req.params.shelter_id;
         dbHandler.getShelterByApiId(shelter_id)
             .then(shelter=>{
@@ -136,12 +154,16 @@ module.exports = (dbHandler,admingAuthentication) => {
                     shelterFormHandler.getCleanPage()
                         .then(data=>{
                             const {html, formData} = data;
-                            addShelterFormInputs(shelter_id, formData).then(()=>{
-                                res.send(html);
-                            })
+                            addShelterFormInputs(shelter_id, formData)
+                                .then(()=>{
+                                    res.redirect(`/shelters/${shelter_id}`);
+                                })
+                                .catch(err=>{
+                                    res.send("Error: " + err);
+                                })
                         })
                         .catch(err=>{
-                            res.send(err);
+                            res.send(err); // REVISE TO NOT SEND ERROR TO CLIENT
                         })
                 }else{
                     res.send("Could not find shelter");
@@ -149,7 +171,7 @@ module.exports = (dbHandler,admingAuthentication) => {
             })
             .catch(err=>{
                 console.log("Err: ", err);
-                res.send(err);
+                res.send(err); // REVISE TO NOT SEND ERROR TO CLIENT
             })        
     });
 
