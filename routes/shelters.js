@@ -49,7 +49,7 @@ module.exports = (dbHandler,adminAuthentication) => {
                 dbHandler.getShelterByApiId(shelter_id)
                     .then(info=>{
                         if(info){
-                            const {shelter, formInputs } = info;
+                            const {shelter, formInputs, metaAnswers} = info;
                             res.locals.shelterInfo = {
                                 reviewed:    shelter.reviewed===1,
                                 blacklisted: shelter.blacklist===1,
@@ -57,7 +57,7 @@ module.exports = (dbHandler,adminAuthentication) => {
                                 actionUrl:   shelter.actionUrl,
                                 formInputs:  formInputs
                             }
-                            // RETRIEVE EXISTING METAANSWERS FOR DROPDOWN W/DESCRIPTIONS, ALLOWING FOR VALUES TO BE ID
+                            res.locals.metaAnswers = metaAnswers;
                         }
                         res.locals.shelter = parseApiData(json);
                         res.render("shelter",{title: `Shelter ${shelter_id}`});

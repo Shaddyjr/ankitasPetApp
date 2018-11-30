@@ -104,15 +104,38 @@
                                     <%const input = shelterInfo.formInputs[i]%>
                                     <tr>
                                       <th scope="row"><%=i+1%></th>
-                                      <th><%=JSON.stringify(input.name)%></th>
-                                      <td><%=JSON.stringify(input.type)%></td>
-                                      <td><%=JSON.stringify(input.element)%></td>
-                                      <td>MetaAnswer</td>
-                                      <td>Description</td>
+                                      <th><%=input.name%></th>
+                                      <td><%=input.type%></td>
+                                      <td><%=input.element%></td>
+                                      <td><input list="metaAnswers" <%if(input.id){%> value="(<%=input.id%>) <%=input.common_name%>"><%}%></td>
+                                      <td><input type="text" placeholder="Details" value="<%=input.description%>"></td>
                                     </tr>
                                 <%}%>
                             </tbody>
                           </table>
+
+                          <script>
+                              document.addEventListener("DOMContentLoaded",()=>{
+                                const metaAnswers = <%-JSON.stringify(metaAnswers)%>;
+                                const inputs = document.querySelectorAll("input[list=metaAnswers]");
+                                inputs.forEach(x=>{
+                                    x.addEventListener("change",e=>{
+                                        const targ = e.target;
+                                        const f = metaAnswers.find(w=>`(${w.id}) ${w.common_name}`===targ.value);
+                                        if(f){
+                                            const desc = targ.parentElement.parentElement.querySelector("input[type=text]");
+                                            desc.value = f.description;
+                                        }
+                                    });
+                                })
+                              })
+                              
+                          </script>
+                          <datalist id="metaAnswers">
+                            <%for(const metaAnswer of metaAnswers){%>
+                                <option data-desc="<%=metaAnswer.description%>" value="(<%=metaAnswer.id%>) <%=metaAnswer.common_name%>">
+                            <%}%>
+                        </datalist>
                     <%}%>
                 <%}%> 
             <%}else{%>

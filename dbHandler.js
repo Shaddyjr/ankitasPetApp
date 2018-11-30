@@ -65,17 +65,22 @@ module.exports = new class DbHandler {
     getShelterByApiId(api_id){
         return new Promise((res,rej)=>{
             const sql="SELECT * FROM shelters WHERE api_id=?";
-            const sql_for_formInputs = "SELECT * FROM shelterFormInputs WHERE shelter_id=?";
+            const sql_for_formInputs = "SELECT * FROM shelterFormInputs LEFT JOIN metaAnswers ON shelterFormInputs.meta_answer_id=metaAnswers.id WHERE shelter_id=?";
+            const sql_for_metaAnswers = "SELECT * FROM metaAnswers";
             this.db.get(sql,api_id,function(err,row){
                 if(err) return rej(err);
                 if(!row) return res(row);
-                this.db.all(sql_for_formInputs, api_id, (err2,rows)=>{
+                this.db.all(sql_for_formInputs, api_id, function(err2,rows){
                     if(err2) return rej(err2);
-                    res({
-                        shelter: row,
-                        formInputs: rows
+                    this.db.all(sql_for_metaAnswers,(err3,rows2)=>{
+                        if(err3) return rej(err3);
+                        res({
+                            shelter: row,
+                            formInputs: rows,
+                            metaAnswers: rows2
+                        })
                     })
-                })
+                }.bind(this))
             }.bind(this))
         })
     }
